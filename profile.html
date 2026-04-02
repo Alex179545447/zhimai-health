@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的 - AI健康助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#3B82F6',
+                        'primary-green': '#22C55E',
+                        'primary-red': '#EF4444',
+                        'primary-orange': '#F97316',
+                        'primary-purple': '#8B5CF6',
+                        'bg-light': '#F1F5F9',
+                        'card-white': '#FFFFFF'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .card-radius { border-radius: 16px; }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen pb-20">
+    <!-- 顶部背景 -->
+    <div class="bg-gradient-to-b from-blue-500 to-blue-400 px-4 pt-6 pb-16">
+        <div class="flex items-center justify-between mb-4">
+            <h1 class="text-xl font-bold text-white">个人中心</h1>
+            <div class="w-10"></div>
+        </div>
+        <!-- 用户信息 -->
+        <div class="bg-white rounded-2xl p-4 shadow-lg">
+            <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-3xl text-primary-blue" id="profileAvatar"></i>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-xl font-bold" id="profileName">姓名</h2>
+                    <p class="text-gray-500" id="profileInfo">去完善健康档案</p>
+                </div>
+                <button onclick="showEditProfile()" class="px-4 py-2 bg-blue-50 text-primary-blue rounded-xl font-medium text-sm">
+                    编辑
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 功能列表 -->
+    <div class="px-3 -mt-10 space-y-3">
+        <!-- 健康档案 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-base font-bold text-gray-800">
+                    <i class="fas fa-file-medical text-primary-blue mr-2"></i>健康档案
+                </h3>
+                <button onclick="showHealthRecord()" class="text-primary-blue text-sm font-medium">
+                    编辑 <i class="fas fa-edit ml-1"></i>
+                </button>
+            </div>
+            <div id="healthRecordDisplay" class="grid grid-cols-2 gap-2 text-sm">
+                <div class="bg-red-50 p-3 rounded-xl">
+                    <p class="text-gray-500 text-xs">过敏史</p>
+                    <p class="font-bold text-gray-800" id="displayAllergy">未填写</p>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-xl">
+                    <p class="text-gray-500 text-xs">既往病史</p>
+                    <p class="font-bold text-gray-800" id="displayHistory">未填写</p>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-xl">
+                    <p class="text-gray-500 text-xs">手术史</p>
+                    <p class="font-bold text-gray-800" id="displaySurgery">未填写</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-xl">
+                    <p class="text-gray-500 text-xs">家族病史</p>
+                    <p class="font-bold text-gray-800" id="displayFamily">未填写</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 常用药品管理 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm">
+            <h3 class="text-base font-bold text-gray-800 mb-3">
+                <i class="fas fa-pills text-primary-purple mr-2"></i>常用药品管理
+            </h3>
+            <div id="commonMedsList" class="space-y-2">
+                <p class="text-center text-gray-400 py-2">暂无常用药品</p>
+            </div>
+            <button onclick="showCommonMedsModal()" class="w-full mt-3 py-3 bg-purple-50 text-primary-purple rounded-xl font-medium">
+                <i class="fas fa-plus mr-2"></i>添加常用药品
+            </button>
+        </div>
+
+        <!-- 数据统计 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm">
+            <h3 class="text-base font-bold text-gray-800 mb-3">
+                <i class="fas fa-chart-bar text-primary-green mr-2"></i>数据统计
+            </h3>
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-red-50 p-3 rounded-xl cursor-pointer hover:bg-red-100" onclick="location.href='blood-pressure.html'">
+                    <p class="text-2xl font-bold text-primary-red" id="bpCount">0</p>
+                    <p class="text-xs text-gray-500">血压记录</p>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-xl cursor-pointer hover:bg-purple-100" onclick="location.href='blood-pressure.html?mode=bs'">
+                    <p class="text-2xl font-bold text-primary-purple" id="bsCount">0</p>
+<p class="text-xs text-gray-500">血糖记录</p>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-xl cursor-pointer hover:bg-orange-100" onclick="location.href='analytics.html'">
+                    <p class="text-2xl font-bold text-primary-orange" id="totalCount">0</p>
+                    <p class="text-xs text-gray-500">总记录</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设置功能 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm">
+            <h3 class="text-base font-bold text-gray-800 mb-3">
+                <i class="fas fa-cog text-gray-500 mr-2"></i>设置
+            </h3>
+            <div class="space-y-1">
+                <button onclick="exportData()" class="w-full flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="fas fa-download text-purple-500 mr-3 w-6"></i>
+                        <span class="text-base">导出健康数据</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+                <button onclick="clearAllData()" class="w-full flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="fas fa-trash text-red-500 mr-3 w-6"></i>
+                        <span class="text-base">清空所有数据</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+                <button onclick="logout()" class="w-full flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="fas fa-sign-out-alt text-orange-500 mr-3 w-6"></i>
+                        <span class="text-base">退出登录</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+                <button onclick="about()" class="w-full flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-50">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-3 w-6"></i>
+                        <span class="text-base">关于我们</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+            </div>
+        </div>
+
+        <p class="text-center text-gray-400 text-sm py-4">家庭健康驾驶舱 v2.0</p>
+    </div>
+
+    <!-- 编辑基本资料弹窗 -->
+    <div id="editProfileModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
+        <div class="bg-card-white rounded-t-2xl w-full max-w-lg p-5 pb-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold">编辑基本资料</h2>
+                <button onclick="closeModal('editProfileModal')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">姓名</label>
+                    <input type="text" id="editName" placeholder="请输入姓名" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">年龄</label>
+                    <input type="number" id="editAge" placeholder="请输入年龄" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">性别</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="selectGender('男')" id="maleBtn" class="py-3 bg-primary-blue text-white rounded-xl font-medium">男</button>
+                        <button onclick="selectGender('女')" id="femaleBtn" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-medium">女</button>
+                    </div>
+                </div>
+                <button onclick="saveBasicProfile()" class="w-full py-4 bg-primary-blue text-white text-lg font-bold rounded-xl">
+                    <i class="fas fa-check mr-2"></i>保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑健康档案弹窗 -->
+    <div id="healthRecordModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
+        <div class="bg-card-white rounded-t-2xl w-full max-w-lg p-5 pb-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold">健康档案</h2>
+                <button onclick="closeModal('healthRecordModal')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">过敏史</label>
+                    <input type="text" id="editAllergy" placeholder="如：青霉素过敏" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">既往病史</label>
+                    <input type="text" id="editHistory" placeholder="如：高血压、糖尿病" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">手术史</label>
+                    <input type="text" id="editSurgery" placeholder="如：2020年阑尾炎手术" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">家族病史</label>
+                    <input type="text" id="editFamily" placeholder="如：父亲有高血压史" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <button onclick="saveHealthRecord()" class="w-full py-4 bg-primary-green text-white text-lg font-bold rounded-xl">
+                    <i class="fas fa-check mr-2"></i>保存健康档案
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加常用药品弹窗 -->
+    <div id="commonMedsModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
+        <div class="bg-card-white rounded-t-2xl w-full max-w-lg p-5 pb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold">添加常用药品</h2>
+                <button onclick="closeModal('commonMedsModal')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">药品名称 *</label>
+                    <input type="text" id="commonMedName" placeholder="如：硝苯地平" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">剂量</label>
+                        <input type="text" id="commonMedDose" placeholder="如：1片" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">用法</label>
+                        <select id="commonMedUsage" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                            <option value="饭后">饭后</option>
+                            <option value="饭前">饭前</option>
+                            <option value="空腹">空腹</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="saveCommonMed()" class="w-full py-4 bg-primary-purple text-white text-lg font-bold rounded-xl">
+                    <i class="fas fa-plus mr-2"></i>添加
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-card-white border-t border-gray-200 px-2 py-2 z-40">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="medicine.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-pills text-xl"></i>
+                <span class="text-xs">药品</span>
+            </a>
+            <a href="blood-pressure.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-heartbeat text-xl"></i>
+                <span class="text-xs">测量</span>
+            </a>
+            <a href="analytics.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-chart-line text-xl"></i>
+                <span class="text-xs">数据</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center py-1 px-3 text-primary-blue">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs font-medium">我的</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        let selectedGender = '男';
+
+        function loadProfile() {
+            const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+            if (profile.name) {
+                document.getElementById('profileName').textContent = profile.name;
+                document.getElementById('headerName').textContent = profile.name;
+            }
+            if (profile.age || profile.gender) {
+                const info = [profile.age ? profile.age + '岁' : '', profile.gender || ''].filter(Boolean).join(' · ');
+                document.getElementById('profileInfo').textContent = info || '已设置';
+                document.getElementById('headerInfo').textContent = info || '已设置';
+            }
+
+            // 健康档案
+            const healthRecord = JSON.parse(localStorage.getItem('healthRecord') || '{}');
+            document.getElementById('displayAllergy').textContent = healthRecord.allergy || '未填写';
+            document.getElementById('displayHistory').textContent = healthRecord.history || '未填写';
+            document.getElementById('displaySurgery').textContent = healthRecord.surgery || '未填写';
+            document.getElementById('displayFamily').textContent = healthRecord.family || '未填写';
+
+            if (healthRecord.gender) selectedGender = healthRecord.gender;
+        }
+
+        function loadStats() {
+            const bp = JSON.parse(localStorage.getItem('bpRecords') || '[]');
+            const bs = JSON.parse(localStorage.getItem('bsRecords') || '[]');
+            const meds = JSON.parse(localStorage.getItem('medicines') || '[]');
+            document.getElementById('bpCount').textContent = bp.length;
+            document.getElementById('bsCount').textContent = bs.length;
+            document.getElementById('totalCount').textContent = bp.length + bs.length + meds.length;
+        }
+
+        function loadCommonMeds() {
+            const commonMeds = JSON.parse(localStorage.getItem('commonMeds') || '[]');
+            const container = document.getElementById('commonMedsList');
+            
+            if (commonMeds.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 py-2">暂无常用药品</p>';
+                return;
+            }
+
+            container.innerHTML = commonMeds.map((m, i) => `
+                <div class="flex items-center justify-between bg-purple-50 p-3 rounded-xl">
+                    <div>
+                        <p class="font-bold">${m.name}</p>
+                        <p class="text-sm text-gray-500">${m.dose} · ${m.usage}</p>
+                    </div>
+                    <button onclick="deleteCommonMed(${i})" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function showEditProfile() {
+            const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+            document.getElementById('editName').value = profile.name || '';
+            document.getElementById('editAge').value = profile.age || '';
+            selectedGender = profile.gender || '男';
+            updateGenderButtons();
+            document.getElementById('editProfileModal').classList.remove('hidden');
+        }
+
+        function showHealthRecord() {
+            const record = JSON.parse(localStorage.getItem('healthRecord') || '{}');
+            document.getElementById('editAllergy').value = record.allergy || '';
+            document.getElementById('editHistory').value = record.history || '';
+            document.getElementById('editSurgery').value = record.surgery || '';
+            document.getElementById('editFamily').value = record.family || '';
+            document.getElementById('healthRecordModal').classList.remove('hidden');
+        }
+
+        function showCommonMedsModal() {
+            document.getElementById('commonMedsModal').classList.remove('hidden');
+        }
+
+        function showSettings() {
+            // 设置页面功能
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function selectGender(g) {
+            selectedGender = g;
+            updateGenderButtons();
+        }
+
+        function updateGenderButtons() {
+            document.getElementById('maleBtn').className = selectedGender === '男' ? 'py-3 bg-primary-blue text-white rounded-xl font-medium' : 'py-3 bg-gray-100 text-gray-600 rounded-xl font-medium';
+            document.getElementById('femaleBtn').className = selectedGender === '女' ? 'py-3 bg-pink-500 text-white rounded-xl font-medium' : 'py-3 bg-gray-100 text-gray-600 rounded-xl font-medium';
+        }
+
+        function saveBasicProfile() {
+            const name = document.getElementById('editName').value.trim();
+            const age = document.getElementById('editAge').value.trim();
+            
+            const profile = {
+                name: name || '用户',
+                age: age,
+                gender: selectedGender
+            };
+            
+            localStorage.setItem('profile', JSON.stringify(profile));
+            localStorage.setItem('healthRecord', JSON.stringify(JSON.parse(localStorage.getItem('healthRecord') || '{}')));
+            
+            // 更新healthRecord中的gender
+            let healthRecord = JSON.parse(localStorage.getItem('healthRecord') || '{}');
+            healthRecord.gender = selectedGender;
+            localStorage.setItem('healthRecord', JSON.stringify(healthRecord));
+            
+            closeModal('editProfileModal');
+            loadProfile();
+            alert('资料已保存！');
+        }
+
+        function saveHealthRecord() {
+            const record = {
+                allergy: document.getElementById('editAllergy').value.trim(),
+                history: document.getElementById('editHistory').value.trim(),
+                surgery: document.getElementById('editSurgery').value.trim(),
+                family: document.getElementById('editFamily').value.trim(),
+                gender: selectedGender,
+                updatedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('healthRecord', JSON.stringify(record));
+            closeModal('healthRecordModal');
+            loadProfile();
+            alert('健康档案已保存！');
+        }
+
+        function saveCommonMed() {
+            const name = document.getElementById('commonMedName').value.trim();
+            const dose = document.getElementById('commonMedDose').value.trim();
+            const usage = document.getElementById('commonMedUsage').value;
+            
+            if (!name) {
+                alert('请输入药品名称');
+                return;
+            }
+            
+            let commonMeds = JSON.parse(localStorage.getItem('commonMeds') || '[]');
+            commonMeds.push({ name, dose: dose || '1片', usage });
+            localStorage.setItem('commonMeds', JSON.stringify(commonMeds));
+            
+            closeModal('commonMedsModal');
+            document.getElementById('commonMedName').value = '';
+            document.getElementById('commonMedDose').value = '';
+            loadCommonMeds();
+            alert('常用药品已添加！');
+        }
+
+        function deleteCommonMed(index) {
+            if (confirm('确定删除这个常用药品？')) {
+                let commonMeds = JSON.parse(localStorage.getItem('commonMeds') || '[]');
+                commonMeds.splice(index, 1);
+                localStorage.setItem('commonMeds', JSON.stringify(commonMeds));
+                loadCommonMeds();
+            }
+        }
+
+        function exportData() {
+            // 生成Excel格式（CSV，可用Excel打开）
+            const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+            const bpRecords = JSON.parse(localStorage.getItem('bpRecords') || '[]');
+            const bsRecords = JSON.parse(localStorage.getItem('bsRecords') || '[]');
+            const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
+            const hospitalRecords = JSON.parse(localStorage.getItem('hospitalRecords') || '[]');
+            
+            // BOM标记，确保Excel正确识别UTF-8中文
+            const BOM = '\uFEFF';
+            let csvContent = BOM;
+            
+            // 标题
+            csvContent += 'AI健康助手 - 健康数据导出\n\n';
+            
+            // 基本信息
+            csvContent += '【基本信息】\n';
+            csvContent += '姓名,年龄,性别\n';
+            csvContent += `${profile.name || ''},${profile.age || ''},${profile.gender || ''}\n\n`;
+            
+            // 血压记录
+            csvContent += '【血压记录】\n';
+            csvContent += '日期时间,高压(mmHg),低压(mmHg),心率(bpm),状态\n';
+            bpRecords.forEach(r => {
+                csvContent += `${r.date},${r.systolic},${r.diastolic},${r.heartRate},${r.status}\n`;
+            });
+            csvContent += '\n';
+            
+            // 血糖记录
+            csvContent += '【血糖记录】\n';
+            csvContent += '日期时间,类型,血糖值(mmol/L),状态\n';
+            bsRecords.forEach(r => {
+                const typeText = r.type === 'fasting' ? '空腹' : '餐后';
+                csvContent += `${r.date},${typeText},${r.value},${r.status}\n`;
+            });
+            csvContent += '\n';
+            
+            // 用药记录
+            csvContent += '【用药记录】\n';
+            csvContent += '药品名称,数量,单位,时间,条件,频次,是否服用\n';
+            medicines.forEach(m => {
+                const timeText = {morning:'早',noon:'午',evening:'晚'}[m.time] || '';
+                const condText = {before:'饭前',after:'饭后','不限':'不限'}[m.condition] || '饭后';
+                csvContent += `${m.name},${m.qty || 1},${m.unit || '片'},${timeText},${condText},${m.frequency || '每天'},${m.taken ? '是' : '否'}\n`;
+            });
+            csvContent += '\n';
+            
+            // 就医记录
+            csvContent += '【就医记录】\n';
+            csvContent += '日期,医院,科室,医生,备注\n';
+            hospitalRecords.forEach(r => {
+                csvContent += `${r.date || ''},${r.hospital || ''},${r.dept || ''},${r.doctor || ''},${r.note || ''}\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `AI健康助手-健康数据-${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+            alert('数据导出成功！\n文件格式：CSV（可用Excel打开）');
+        }
+
+        function clearAllData() {
+            if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                localStorage.clear();
+                alert('数据已清空');
+                location.reload();
+            }
+        }
+
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                localStorage.removeItem('userInfo');
+                window.location.href = 'login.html';
+            }
+        }
+
+        function about() {
+            alert('AI健康助手 v2.0\n\n您的智能健康管理伙伴\n\n功能：\n• 药品管理（支持拍照识别）\n• 血压血糖监测\n• 就医挂号提醒\n• 数据分析（周/月/季/年）\n• 健康档案管理\n• 数据导出（Excel格式）\n\n专为老年人设计，大字体大按钮，方便操作。');
+        }
+
+        loadProfile();
+        loadStats();
+        loadCommonMeds();
+    </script>
+</body>
+</html>

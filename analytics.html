@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>数据分析 - AI健康助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-red': '#EF4444',
+                        'primary-purple': '#8B5CF6',
+                        'primary-blue': '#3B82F6',
+                        'primary-green': '#22C55E',
+                        'primary-orange': '#F97316',
+                        'bg-light': '#F1F5F9',
+                        'card-white': '#FFFFFF'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .card-radius { border-radius: 16px; }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen pb-24">
+    <!-- 大字体提示弹窗 -->
+    <div id="bigAlert" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-6">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl">
+            <p id="bigAlertText" class="text-2xl font-bold text-gray-800 text-center leading-relaxed whitespace-pre-line"></p>
+            <button onclick="closeBigAlert()" class="w-full mt-6 py-4 bg-primary-green text-white text-xl font-bold rounded-2xl active:scale-95">
+                确定
+            </button>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <header class="bg-primary-green text-white px-4 py-3 sticky top-0 z-50">
+        <div class="flex items-center justify-between">
+            <a href="index.html" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-lg font-bold">数据分析</h1>
+            <div class="w-10"></div>
+        </div>
+    </header>
+
+    <!-- 数据类型切换 -->
+    <div class="bg-card-white px-3 py-2 shadow-sm">
+        <div class="flex space-x-2 overflow-x-auto">
+            <button onclick="switchTab('bp')" id="tabBP" class="px-4 py-2 bg-primary-red text-white rounded-full font-bold text-base whitespace-nowrap flex items-center">
+                <i class="fas fa-heartbeat mr-1"></i>血压
+            </button>
+            <button onclick="switchTab('bs')" id="tabBS" class="px-4 py-2 bg-purple-500 text-white rounded-full font-bold text-base whitespace-nowrap flex items-center">
+                <i class="fas fa-tint mr-1"></i>血糖
+            </button>
+        </div>
+    </div>
+
+    <!-- 时间范围 -->
+    <div class="bg-card-white px-3 py-2 border-b">
+        <div class="flex space-x-2">
+            <button onclick="setRange('week')" id="rangeWeek" class="px-4 py-2 bg-primary-green text-white rounded-lg font-medium text-sm">本周</button>
+            <button onclick="setRange('month')" id="rangeMonth" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium text-sm">本月</button>
+            <button onclick="setRange('quarter')" id="rangeQuarter" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium text-sm">本季</button>
+            <button onclick="setRange('year')" id="rangeYear" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium text-sm">本年</button>
+        </div>
+    </div>
+
+    <!-- 血压数据 -->
+    <div id="bpContent" class="px-3 py-3">
+        <!-- 统计卡片 -->
+        <div class="grid grid-cols-3 gap-2 mb-3">
+            <div class="bg-card-white card-radius p-3 text-center shadow-sm cursor-pointer hover:bg-red-50" onclick="location.href='blood-pressure.html'">
+                <p class="text-xs text-gray-500">平均收缩压</p>
+                <p class="text-2xl font-bold text-primary-red" id="avgSys">--</p>
+                <p class="text-xs text-gray-400">mmHg</p>
+            </div>
+            <div class="bg-card-white card-radius p-3 text-center shadow-sm cursor-pointer hover:bg-blue-50" onclick="location.href='blood-pressure.html'">
+                <p class="text-xs text-gray-500">平均舒张压</p>
+                <p class="text-2xl font-bold text-primary-blue" id="avgDia">--</p>
+                <p class="text-xs text-gray-400">mmHg</p>
+            </div>
+            <div class="bg-card-white card-radius p-3 text-center shadow-sm cursor-pointer hover:bg-orange-50" onclick="location.href='blood-pressure.html'">
+                <p class="text-xs text-gray-500">平均心率</p>
+                <p class="text-2xl font-bold text-primary-orange" id="avgHR">--</p>
+                <p class="text-xs text-gray-400">bpm</p>
+            </div>
+        </div>
+
+        <!-- 状态分布 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm mb-3">
+            <h3 class="text-base font-bold mb-2">状态分布</h3>
+            <div id="bpStats" class="grid grid-cols-2 gap-3"></div>
+        </div>
+
+        <!-- 趋势图 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm mb-3">
+            <h3 class="text-base font-bold mb-2 flex items-center">
+                <i class="fas fa-chart-line text-primary-red mr-2"></i>血压趋势
+            </h3>
+            <canvas id="bpChart" style="min-height: 200px;"></canvas>
+        </div>
+
+        <!-- 最近记录 -->
+        <h3 class="text-base font-bold mt-4 mb-2 flex items-center">
+            <i class="fas fa-list text-gray-500 mr-2"></i>最近记录
+        </h3>
+        <div id="bpRecentList" class="space-y-2"></div>
+    </div>
+
+    <!-- 血糖数据 -->
+    <div id="bsContent" class="px-3 py-3 hidden">
+        <div class="grid grid-cols-2 gap-2 mb-3">
+            <div class="bg-card-white card-radius p-3 text-center shadow-sm cursor-pointer hover:bg-purple-50" onclick="location.href='blood-pressure.html?mode=bs'">
+                <p class="text-xs text-gray-500">空腹平均</p>
+                <p class="text-2xl font-bold text-purple-500" id="avgFasting">--</p>
+                <p class="text-xs text-gray-400">mmol/L</p>
+            </div>
+            <div class="bg-card-white card-radius p-3 text-center shadow-sm cursor-pointer hover:bg-pink-50" onclick="location.href='blood-pressure.html?mode=bs'">
+                <p class="text-xs text-gray-500">餐后平均</p>
+                <p class="text-2xl font-bold text-pink-500" id="avgAfterMeal">--</p>
+                <p class="text-xs text-gray-400">mmol/L</p>
+            </div>
+        </div>
+
+        <!-- 血糖状态分布 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm mb-3">
+            <h3 class="text-base font-bold mb-2">状态分布</h3>
+            <div id="bsStats" class="grid grid-cols-3 gap-3"></div>
+        </div>
+
+        <div class="bg-card-white card-radius p-4 shadow-sm mb-3">
+            <h3 class="text-base font-bold mb-2 flex items-center">
+                <i class="fas fa-chart-line text-purple-500 mr-2"></i>血糖趋势
+            </h3>
+            <canvas id="bsChart" style="min-height: 200px;"></canvas>
+        </div>
+        <h3 class="text-base font-bold mt-4 mb-2 flex items-center">
+            <i class="fas fa-list text-gray-500 mr-2"></i>最近记录
+        </h3>
+        <div id="bsRecentList" class="space-y-2"></div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-card-white border-t border-gray-200 px-2 py-2 z-40">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="medicine.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-pills text-xl"></i>
+                <span class="text-xs">药品</span>
+            </a>
+            <a href="blood-pressure.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-heartbeat text-xl"></i>
+                <span class="text-xs">测量</span>
+            </a>
+            <a href="analytics.html" class="flex flex-col items-center py-1 px-3 text-primary-green">
+                <i class="fas fa-chart-line text-xl"></i>
+                <span class="text-xs font-medium">数据</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs">我的</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        let currentTab = 'bp';
+        let currentRange = 'week';
+        let bpChart = null;
+        let bsChart = null;
+
+        // 大字体提示弹窗
+        function showBigAlert(message) {
+            document.getElementById('bigAlertText').textContent = message;
+            document.getElementById('bigAlert').classList.remove('hidden');
+        }
+        function closeBigAlert() {
+            document.getElementById('bigAlert').classList.add('hidden');
+        }
+
+        // 从localStorage读取真实数据
+        function getBPRecords() {
+            return JSON.parse(localStorage.getItem('bpRecords')) || [];
+        }
+
+        function getBSRecords() {
+            return JSON.parse(localStorage.getItem('bsRecords')) || [];
+        }
+
+        function getMedicines() {
+            return JSON.parse(localStorage.getItem('medicines')) || [];
+        }
+
+        function getHospitalRecords() {
+            return JSON.parse(localStorage.getItem('hospitalRecords')) || [];
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            // 重置所有按钮样式
+            document.getElementById('tabBP').className = 'px-4 py-2 bg-gray-100 text-gray-600 rounded-full font-bold text-base whitespace-nowrap flex items-center';
+            document.getElementById('tabBS').className = 'px-4 py-2 bg-gray-100 text-gray-600 rounded-full font-bold text-base whitespace-nowrap flex items-center';
+            
+            // 隐藏所有内容
+            document.getElementById('bpContent').classList.add('hidden');
+            document.getElementById('bsContent').classList.add('hidden');
+            
+            // 高亮当前按钮
+            if (tab === 'bp') {
+                document.getElementById('tabBP').className = 'px-4 py-2 bg-primary-red text-white rounded-full font-bold text-base whitespace-nowrap flex items-center';
+                document.getElementById('bpContent').classList.remove('hidden');
+                renderBPData();
+            } else if (tab === 'bs') {
+                document.getElementById('tabBS').className = 'px-4 py-2 bg-purple-500 text-white rounded-full font-bold text-base whitespace-nowrap flex items-center';
+                document.getElementById('bsContent').classList.remove('hidden');
+                renderBSData();
+            }
+        }
+
+        function setRange(range) {
+            currentRange = range;
+            ['week', 'month', 'quarter', 'year'].forEach(r => {
+                const btn = document.getElementById('range' + r.charAt(0).toUpperCase() + r.slice(1));
+                btn.className = r === range ? 'px-4 py-2 bg-primary-green text-white rounded-lg font-medium text-sm' : 'px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium text-sm';
+            });
+            if (currentTab === 'bp') renderBPData();
+            else if (currentTab === 'bs') renderBSData();
+        }
+
+        function filterByRange(records) {
+            const now = new Date();
+            let startDate = new Date();
+            
+            if (currentRange === 'week') startDate.setDate(now.getDate() - 7);
+            else if (currentRange === 'month') startDate.setMonth(now.getMonth() - 1);
+            else if (currentRange === 'quarter') startDate.setMonth(now.getMonth() - 3);
+            else if (currentRange === 'year') startDate.setFullYear(now.getFullYear() - 1);
+            
+            return records.filter(r => new Date(r.date) >= startDate);
+        }
+
+        function renderBPData() {
+            const allRecords = getBPRecords();
+            const bpRecords = filterByRange(allRecords);
+            
+            if (bpRecords.length === 0) {
+                document.getElementById('avgSys').textContent = '--';
+                document.getElementById('avgDia').textContent = '--';
+                document.getElementById('avgHR').textContent = '--';
+                document.getElementById('bpStats').innerHTML = '<p class="col-span-2 text-center text-gray-400 py-8">暂无血压数据<br><span class="text-sm">去测量页面添加记录</span></p>';
+                document.getElementById('bpRecentList').innerHTML = '<p class="text-center text-gray-400 py-4">暂无记录</p>';
+                if (bpChart) { bpChart.destroy(); bpChart = null; }
+                return;
+            }
+
+            const avgSys = Math.round(bpRecords.reduce((s, r) => s + r.systolic, 0) / bpRecords.length);
+            const avgDia = Math.round(bpRecords.reduce((s, r) => s + r.diastolic, 0) / bpRecords.length);
+            const avgHR = Math.round(bpRecords.reduce((s, r) => s + r.heartRate, 0) / bpRecords.length);
+            document.getElementById('avgSys').textContent = avgSys;
+            document.getElementById('avgDia').textContent = avgDia;
+            document.getElementById('avgHR').textContent = avgHR;
+
+            let normal = 0, high = 0;
+            bpRecords.forEach(r => {
+                if (r.status === '正常') normal++;
+                else high++;
+            });
+            const total = bpRecords.length || 1;
+            document.getElementById('bpStats').innerHTML = `
+                <div class="bg-green-50 p-4 rounded-xl text-center cursor-pointer" onclick="location.href='blood-pressure.html'">
+                    <span class="text-green-600 font-bold text-2xl">${Math.round(normal/total*100)}%</span>
+                    <p class="text-xs text-gray-500 mt-1">正常</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-xl text-center cursor-pointer" onclick="location.href='blood-pressure.html'">
+                    <span class="text-red-600 font-bold text-2xl">${Math.round(high/total*100)}%</span>
+                    <p class="text-xs text-gray-500 mt-1">偏高</p>
+                </div>
+            `;
+
+            const ctx = document.getElementById('bpChart').getContext('2d');
+            if (bpChart) bpChart.destroy();
+            bpChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: bpRecords.slice().reverse().map(r => r.date.slice(5, 10)),
+                    datasets: [
+                        { label: '高压', data: bpRecords.slice().reverse().map(r => r.systolic), borderColor: '#EF4444', backgroundColor: 'transparent', borderWidth: 3, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#EF4444' },
+                        { label: '低压', data: bpRecords.slice().reverse().map(r => r.diastolic), borderColor: '#3B82F6', backgroundColor: 'transparent', borderWidth: 3, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#3B82F6' }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        y: { display: true, title: { display: true, text: 'mmHg' }, min: 40, max: 200 }
+                    }
+                }
+            });
+
+            // 最近记录
+            document.getElementById('bpRecentList').innerHTML = bpRecords.slice(0, 5).map(r => {
+                const color = r.status === '正常' ? 'green' : 'red';
+                return `
+                    <div class="bg-card-white card-radius p-3 shadow-sm cursor-pointer hover:bg-gray-50" onclick="location.href='blood-pressure.html'">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-bold text-lg">${r.systolic}/${r.diastolic} <span class="text-gray-400 text-sm">mmHg</span></p>
+                                <p class="text-sm text-gray-500">心率 ${r.heartRate} bpm</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 bg-${color}-100 text-${color}-600 rounded-full text-sm font-bold">${r.status}</span>
+                                <p class="text-xs text-gray-400 mt-1">${r.date.slice(5, 16)}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderBSData() {
+            const allRecords = getBSRecords();
+            const bsRecords = filterByRange(allRecords);
+            
+            if (bsRecords.length === 0) {
+                document.getElementById('avgFasting').textContent = '--';
+document.getElementById('avgAfterMeal').textContent = '--';
+                document.getElementById('bsStats').innerHTML = '<p class="col-span-3 text-center text-gray-400 py-4">暂无数据</p>';
+                document.getElementById('bsRecentList').innerHTML = '<p class="text-center text-gray-400 py-4">暂无记录</p>';
+                if (bsChart) { bsChart.destroy(); bsChart = null; }
+                return;
+            }
+
+            const fasting = bsRecords.filter(r => r.type === 'fasting');
+            const afterMeal = bsRecords.filter(r => r.type === 'afterMeal');
+            document.getElementById('avgFasting').textContent = fasting.length ? (fasting.reduce((s, r) => s + r.value, 0) / fasting.length).toFixed(1) : '--';
+            document.getElementById('avgAfterMeal').textContent = afterMeal.length ? (afterMeal.reduce((s, r) => s + r.value, 0) / afterMeal.length).toFixed(1) : '--';
+
+            // 状态分布
+            let normal = 0, low = 0, high = 0;
+            bsRecords.forEach(r => {
+                if (r.status === '正常') normal++;
+                else if (r.status === '偏低') low++;
+                else high++;
+            });
+            const total = bsRecords.length || 1;
+            document.getElementById('bsStats').innerHTML = `
+                <div class="bg-green-50 p-3 rounded-xl text-center cursor-pointer" onclick="location.href='blood-pressure.html?mode=bs'">
+                    <span class="text-green-600 font-bold text-xl">${Math.round(normal/total*100)}%</span>
+                    <p class="text-xs text-gray-500 mt-1">正常</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-xl text-center cursor-pointer" onclick="location.href='blood-pressure.html?mode=bs'">
+                    <span class="text-blue-600 font-bold text-xl">${Math.round(low/total*100)}%</span>
+                    <p class="text-xs text-gray-500 mt-1">偏低</p>
+                </div>
+                <div class="bg-red-50 p-3 rounded-xl text-center cursor-pointer" onclick="location.href='blood-pressure.html?mode=bs'">
+                    <span class="text-red-600 font-bold text-xl">${Math.round(high/total*100)}%</span>
+                    <p class="text-xs text-gray-500 mt-1">偏高</p>
+                </div>
+            `;
+
+            const ctx = document.getElementById('bsChart').getContext('2d');
+            if (bsChart) bsChart.destroy();
+            bsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: bsRecords.slice().reverse().map(r => r.date.slice(5, 10)),
+                    datasets: [
+                        { label: '空腹', data: bsRecords.slice().reverse().map(r => r.type === 'fasting' ? r.value : null), borderColor: '#8B5CF6', backgroundColor: 'transparent', borderWidth: 3, tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#8B5CF6' },
+                        { label: '餐后', data: bsRecords.slice().reverse().map(r => r.type === 'afterMeal' ? r.value : null), borderColor: '#EC4899', backgroundColor: 'transparent', borderWidth: 3, tension: 0.4, spanGaps: true, pointRadius: 4, pointBackgroundColor: '#EC4899' }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { y: { min: 0 } } }
+            });
+
+            document.getElementById('bsRecentList').innerHTML = bsRecords.slice(0, 5).map(r => {
+                const typeText = r.type === 'fasting' ? '空腹' : '餐后';
+                const color = r.status === '正常' ? 'green' : r.status === '偏高' ? 'red' : 'blue';
+                return `
+                    <div class="bg-card-white card-radius p-3 shadow-sm cursor-pointer hover:bg-gray-50" onclick="location.href='blood-pressure.html?mode=bs'">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-bold text-lg">${r.value} <span class="text-gray-400 text-sm">mmol/L</span></p>
+                                <p class="text-sm text-gray-500">${typeText}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-3 py-1 bg-${color}-100 text-${color}-600 rounded-full text-sm font-bold">${r.status}</span>
+                                <p class="text-xs text-gray-400 mt-1">${r.date.slice(5, 16)}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function exportAllData() {
+            const data = {
+                profile: JSON.parse(localStorage.getItem('profile') || '{}'),
+                bpRecords: getBPRecords(),
+                bsRecords: getBSRecords(),
+                medicines: getMedicines(),
+                hospitalRecords: getHospitalRecords(),
+                registerReminders: JSON.parse(localStorage.getItem('registerReminders') || '[]'),
+                hospitalReminders: JSON.parse(localStorage.getItem('hospitalReminders') || '[]'),
+                exportDate: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `家庭健康数据-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
+
+        renderBPData();
+    </script>
+</body>
+</html>

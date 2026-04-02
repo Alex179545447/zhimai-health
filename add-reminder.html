@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>添加健康提醒 - 家庭健康驾驶舱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'safe-blue': '#2563eb',
+                        'health-green': '#10b981',
+                        'alert-orange': '#f59e0b',
+                        'alarm-red': '#ef4444',
+                        'bg-light': '#f8fafc',
+                        'card-white': '#ffffff'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .touch-target { min-height: 56px; }
+        .btn-radius { border-radius: 16px; }
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .pulse-ring::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse-ring 1.5s ease-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen pb-24">
+    <!-- 顶部导航 -->
+    <header class="bg-safe-blue text-white px-4 py-4 sticky top-0 z-50 shadow-lg">
+        <div class="flex items-center justify-between">
+            <a href="index.html" class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <i class="fas fa-arrow-left text-xl"></i>
+            </a>
+            <h1 class="text-xl font-bold">添加健康提醒</h1>
+            <div class="w-12"></div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="px-4 py-6 space-y-6">
+        <!-- 语音输入区 -->
+        <div class="bg-card-white rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-microphone text-alert-orange mr-2"></i>语音输入
+            </h2>
+            <div class="flex flex-col items-center py-6">
+                <button id="voiceBtn" class="relative w-32 h-32 bg-alert-orange rounded-full flex items-center justify-center text-white shadow-lg btn-radius touch-target transition-all duration-300 active:scale-95" onclick="toggleVoice()">
+                    <i class="fas fa-microphone text-5xl" id="micIcon"></i>
+                </button>
+                <p class="text-lg text-gray-600 mt-4" id="voiceStatus">点击开始说话</p>
+                <p class="text-base text-gray-400 mt-2" id="voiceHint">或长按按钮语音输入</p>
+            </div>
+        </div>
+
+        <!-- 文字输入区 -->
+        <div class="bg-card-white rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-keyboard text-safe-blue mr-2"></i>文字输入
+            </h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-lg font-medium text-gray-700 mb-2">提醒内容</label>
+                    <textarea id="reminderContent" class="w-full h-32 p-4 text-lg border-2 border-gray-200 rounded-xl focus:border-safe-blue focus:outline-none resize-none transition-colors" placeholder="例如：每天早上8点服用降压药"></textarea>
+                </div>
+                <div>
+                    <label class="block text-lg font-medium text-gray-700 mb-2">提醒时间</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <input type="time" id="reminderTime" value="08:00" class="w-full h-14 p-3 text-lg border-2 border-gray-200 rounded-xl focus:border-safe-blue focus:outline-none transition-colors">
+                        </div>
+                        <div>
+                            <select id="repeatType" class="w-full h-14 p-3 text-lg border-2 border-gray-200 rounded-xl focus:border-safe-blue focus:outline-none transition-colors bg-white">
+                                <option value="once">仅一次</option>
+                                <option value="daily">每天</option>
+                                <option value="weekdays">工作日</option>
+                                <option value="weekly">每周</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-lg font-medium text-gray-700 mb-2">提醒类型</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button class="reminder-type-btn h-16 bg-safe-blue text-white rounded-xl btn-radius touch-target flex flex-col items-center justify-center" data-type="medicine">
+                            <i class="fas fa-pills text-xl mb-1"></i>
+                            <span class="text-sm">服药</span>
+                        </button>
+                        <button class="reminder-type-btn h-16 bg-gray-100 text-gray-700 rounded-xl btn-radius touch-target flex flex-col items-center justify-center" data-type="measure">
+                            <i class="fas fa-heartbeat text-xl mb-1"></i>
+                            <span class="text-sm">测量</span>
+                        </button>
+                        <button class="reminder-type-btn h-16 bg-gray-100 text-gray-700 rounded-xl btn-radius touch-target flex flex-col items-center justify-center" data-type="exercise">
+                            <i class="fas fa-walking text-xl mb-1"></i>
+                            <span class="text-sm">运动</span>
+                        </button>
+                        <button class="reminder-type-btn h-16 bg-gray-100 text-gray-700 rounded-xl btn-radius touch-target flex flex-col items-center justify-center" data-type="meal">
+                            <i class="fas fa-utensils text-xl mb-1"></i>
+                            <span class="text-sm">饮食</span>
+                        </button>
+                        <button class="reminder-type-btn h-16 bg-gray-100 text-gray-700 rounded-xl btn-radius touch-target flex flex-col items-center justify-center" data-type="sleep">
+                            <i class="fas fa-moon text-xl mb-1"></i>
+                            <span class="text-sm">睡眠</span>
+                        </button>
+                        <button class="reminder-type-btn h-16 bg-gray-100 text-gray-700 rounded-xl btn-radius touch-target flex flex-col items-center justify-center" data-type="other">
+                            <i class="fas fa-ellipsis-h text-xl mb-1"></i>
+                            <span class="text-sm">其他</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速模板 -->
+        <div class="bg-card-white rounded-2xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-bolt text-health-green mr-2"></i>快速模板
+            </h2>
+            <div class="space-y-3">
+                <button onclick="useTemplate('早上服用降压药', '08:00', 'medicine')" class="w-full py-4 px-4 bg-blue-50 text-safe-blue rounded-xl btn-radius touch-target text-left flex items-center">
+                    <i class="fas fa-pills mr-3 text-xl"></i>
+                    <span class="text-lg">早上服用降压药</span>
+                </button>
+                <button onclick="useTemplate('测量血压', '09:00', 'measure')" class="w-full py-4 px-4 bg-red-50 text-alarm-red rounded-xl btn-radius touch-target text-left flex items-center">
+                    <i class="fas fa-heartbeat mr-3 text-xl"></i>
+                    <span class="text-lg">测量血压</span>
+                </button>
+                <button onclick="useTemplate('午饭后服药', '12:30', 'medicine')" class="w-full py-4 px-4 bg-blue-50 text-safe-blue rounded-xl btn-radius touch-target text-left flex items-center">
+                    <i class="fas fa-clock mr-3 text-xl"></i>
+                    <span class="text-lg">午饭后服药</span>
+                </button>
+                <button onclick="useTemplate('傍晚散步30分钟', '18:00', 'exercise')" class="w-full py-4 px-4 bg-green-50 text-health-green rounded-xl btn-radius touch-target text-left flex items-center">
+                    <i class="fas fa-walking mr-3 text-xl"></i>
+                    <span class="text-lg">傍晚散步30分钟</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 确认按钮 -->
+        <div class="pt-4">
+            <button onclick="saveReminder()" class="w-full py-5 bg-safe-blue text-white text-xl font-bold rounded-xl btn-radius touch-target shadow-lg">
+                <i class="fas fa-check mr-2"></i>保存提醒
+            </button>
+            <button onclick="resetForm()" class="w-full py-5 mt-3 bg-gray-100 text-gray-600 text-xl font-medium rounded-xl btn-radius touch-target">
+                <i class="fas fa-redo mr-2"></i>重置
+            </button>
+        </div>
+    </main>
+
+    <!-- 底部导航 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-card-white border-t border-gray-200 px-4 py-2 z-50">
+        <div class="flex justify-around items-center">
+            <a href="index.html" class="flex flex-col items-center py-2 px-4 text-gray-400">
+                <i class="fas fa-home text-2xl mb-1"></i>
+                <span class="text-sm">首页</span>
+            </a>
+            <a href="add-reminder.html" class="flex flex-col items-center py-2 px-4 text-safe-blue">
+                <i class="fas fa-bell text-2xl mb-1"></i>
+                <span class="text-sm font-medium">提醒</span>
+            </a>
+            <a href="blood-pressure.html" class="flex flex-col items-center py-2 px-4 text-gray-400">
+                <i class="fas fa-heartbeat text-2xl mb-1"></i>
+                <span class="text-sm">血压</span>
+            </a>
+            <a href="blood-pressure-trend.html" class="flex flex-col items-center py-2 px-4 text-gray-400">
+                <i class="fas fa-chart-line text-2xl mb-1"></i>
+                <span class="text-sm">趋势</span>
+            </a>
+            <a href="#" class="flex flex-col items-center py-2 px-4 text-gray-400">
+                <i class="fas fa-user text-2xl mb-1"></i>
+                <span class="text-sm">我的</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Toast提示 -->
+    <div id="toast" class="fixed top-24 left-4 right-4 bg-health-green text-white px-6 py-4 rounded-xl shadow-lg transform -translate-y-full opacity-0 transition-all duration-300 z-50 flex items-center">
+        <i class="fas fa-check-circle text-2xl mr-3"></i>
+        <span class="text-lg font-medium" id="toastMessage">提醒已保存</span>
+    </div>
+
+    <script>
+        let isRecording = false;
+
+        // 语音输入切换
+        function toggleVoice() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            const micIcon = document.getElementById('micIcon');
+            const voiceStatus = document.getElementById('voiceStatus');
+            const voiceHint = document.getElementById('voiceHint');
+
+            isRecording = !isRecording;
+
+            if (isRecording) {
+                voiceBtn.classList.add('bg-alarm-red', 'animate-pulse');
+                voiceBtn.classList.remove('bg-alert-orange');
+                micIcon.classList.remove('fa-microphone');
+                micIcon.classList.add('fa-stop');
+                voiceStatus.textContent = '正在聆听...';
+                voiceStatus.classList.add('text-alarm-red');
+                voiceHint.textContent = '请说出您的提醒内容';
+
+                // 模拟语音识别
+                setTimeout(() => {
+                    if (isRecording) {
+                        document.getElementById('reminderContent').value = '早上8点服用降压药一片';
+                        toggleVoice();
+                        showToast('已识别：早上8点服用降压药一片');
+                    }
+                }, 3000);
+            } else {
+                voiceBtn.classList.remove('bg-alarm-red', 'animate-pulse');
+                voiceBtn.classList.add('bg-alert-orange');
+                micIcon.classList.remove('fa-stop');
+                micIcon.classList.add('fa-microphone');
+                voiceStatus.textContent = '点击开始说话';
+                voiceStatus.classList.remove('text-alarm-red');
+                voiceHint.textContent = '或长按按钮语音输入';
+            }
+        }
+
+        // 提醒类型选择
+        document.querySelectorAll('.reminder-type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.reminder-type-btn').forEach(b => {
+                    b.classList.remove('bg-safe-blue', 'text-white');
+                    b.classList.add('bg-gray-100', 'text-gray-700');
+                });
+                this.classList.remove('bg-gray-100', 'text-gray-700');
+                this.classList.add('bg-safe-blue', 'text-white');
+            });
+        });
+
+        // 使用模板
+        function useTemplate(content, time, type) {
+            document.getElementById('reminderContent').value = content;
+            document.getElementById('reminderTime').value = time;
+
+            document.querySelectorAll('.reminder-type-btn').forEach(btn => {
+                btn.classList.remove('bg-safe-blue', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+                if (btn.dataset.type === type) {
+                    btn.classList.remove('bg-gray-100', 'text-gray-700');
+                    btn.classList.add('bg-safe-blue', 'text-white');
+                }
+            });
+
+            showToast('已应用模板');
+        }
+
+        // 保存提醒
+        function saveReminder() {
+            const content = document.getElementById('reminderContent').value.trim();
+            if (!content) {
+                showToast('请输入提醒内容', 'error');
+                return;
+            }
+            showToast('提醒已保存');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1500);
+        }
+
+        // 重置表单
+        function resetForm() {
+            document.getElementById('reminderContent').value = '';
+            document.getElementById('reminderTime').value = '08:00';
+            document.getElementById('repeatType').value = 'once';
+            document.querySelectorAll('.reminder-type-btn').forEach(btn => {
+                btn.classList.remove('bg-safe-blue', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            showToast('已重置');
+        }
+
+        // Toast提示
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+            toast.classList.remove('bg-health-green', 'bg-alarm-red');
+            toast.classList.add(type === 'success' ? 'bg-health-green' : 'bg-alarm-red');
+            toast.classList.remove('-translate-y-full', 'opacity-0');
+
+            setTimeout(() => {
+                toast.classList.add('-translate-y-full', 'opacity-0');
+            }, 2500);
+        }
+
+        // 长按开始录音
+        let pressTimer;
+        document.getElementById('voiceBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            pressTimer = setTimeout(() => {
+                if (!isRecording) toggleVoice();
+            }, 500);
+        });
+
+        document.getElementById('voiceBtn').addEventListener('touchend', () => {
+            clearTimeout(pressTimer);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI健康助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#3B82F6',
+                        'primary-red': '#EF4444',
+                        'primary-orange': '#F97316',
+                        'primary-green': '#22C55E',
+                        'bg-light': '#F1F5F9',
+                        'card-white': '#FFFFFF'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .big-btn { min-height: 90px; border-radius: 16px; }
+        .card-radius { border-radius: 16px; }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen pb-20">
+    <!-- 大字体提示弹窗 -->
+    <div id="bigAlert" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-6">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl">
+            <p id="bigAlertText" class="text-2xl font-bold text-gray-800 text-center leading-relaxed whitespace-pre-line"></p>
+            <button onclick="closeBigAlert()" class="w-full mt-6 py-4 bg-primary-blue text-white text-xl font-bold rounded-2xl active:scale-95">
+                确定
+            </button>
+        </div>
+    </div>
+    
+    <!-- 顶部状态栏 -->
+    <header class="bg-gradient-to-r from-blue-500 to-blue-400 text-white px-4 py-3 sticky top-0 z-50">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div id="avatarContainer" class="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold" id="headerName">AI健康助手</h1>
+                    <p class="text-sm text-white/80" id="headerInfo">您的健康管理伙伴</p>
+                </div>
+            </div>
+            <button onclick="requestNotificationPermission()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center" title="开启通知">
+                <i class="fas fa-bell text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="px-3 py-3 pb-20">
+        <!-- 当前时段服药提醒 -->
+        <div id="periodAlert" class="bg-gradient-to-r from-primary-orange to-orange-400 text-white rounded-2xl p-4 mb-3">
+            <!-- 动态生成 -->
+        </div>
+
+        <!-- 4个大按钮 -->
+        <div class="grid grid-cols-2 gap-3 mb-3">
+            <a href="medicine.html" class="big-btn bg-primary-blue text-white flex flex-col items-center justify-center shadow-lg active:scale-95 transition-transform">
+                <i class="fas fa-pills text-3xl mb-2"></i>
+                <span class="text-base font-bold">我的药品</span>
+            </a>
+            
+            <a href="blood-pressure.html" class="big-btn bg-gradient-to-br from-primary-red to-purple-500 text-white flex flex-col items-center justify-center shadow-lg active:scale-95 transition-transform">
+                <i class="fas fa-heartbeat text-3xl mb-2"></i>
+                <span class="text-base font-bold">血压血糖</span>
+            </a>
+            
+            <a href="reminders.html" class="big-btn bg-gradient-to-br from-cyan-500 to-blue-500 text-white flex flex-col items-center justify-center shadow-lg active:scale-95 transition-transform">
+                <i class="fas fa-hospital text-3xl mb-2"></i>
+                <span class="text-base font-bold">就医提醒</span>
+            </a>
+            
+            <a href="analytics.html" class="big-btn bg-primary-green text-white flex flex-col items-center justify-center shadow-lg active:scale-95 transition-transform">
+                <i class="fas fa-chart-line text-3xl mb-2"></i>
+                <span class="text-base font-bold">数据分析</span>
+            </a>
+        </div>
+
+        <!-- 待服药提醒列表 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm mb-3">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-base font-bold text-gray-800">
+                    <i class="fas fa-clock text-primary-orange mr-2"></i>待服药提醒
+                </h3>
+                <span class="text-sm text-gray-500" id="pendingCount">0项</span>
+            </div>
+            <div id="pendingMeds" class="space-y-2">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+
+        <!-- 今日概览 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm mb-3">
+            <h2 class="text-lg font-bold text-gray-800 mb-3">
+                <i class="fas fa-calendar-check text-primary-green mr-2"></i>今日概览
+            </h2>
+            <div class="grid grid-cols-3 gap-2">
+                <div class="bg-blue-50 rounded-xl py-3 text-center">
+                    <p class="text-2xl font-bold text-primary-blue" id="todayMedicine">0</p>
+                    <p class="text-sm text-gray-600">已服药</p>
+                </div>
+                <div class="bg-red-50 rounded-xl py-3 text-center">
+                    <p class="text-2xl font-bold text-primary-red" id="todayBP">0</p>
+                    <p class="text-sm text-gray-600">已测量</p>
+                </div>
+                <div class="bg-orange-50 rounded-xl py-3 text-center">
+                    <p class="text-2xl font-bold text-primary-orange" id="todayPending">0</p>
+                    <p class="text-sm text-gray-600">待服药</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速操作 -->
+        <div class="bg-card-white card-radius p-4 shadow-sm">
+            <h3 class="text-base font-bold text-gray-800 mb-3">
+                <i class="fas fa-bolt text-primary-blue mr-2"></i>快捷操作
+            </h3>
+            <div class="grid grid-cols-4 gap-2">
+                <button onclick="takeAllPending()" id="btnTakeAll" class="flex flex-col items-center py-3 bg-blue-50 rounded-xl active:bg-blue-100">
+                    <i class="fas fa-check-double text-2xl text-primary-blue mb-1"></i>
+                    <span class="text-xs font-medium text-gray-700">一键服药</span>
+                </button>
+                <button onclick="location.href='blood-pressure.html?mode=bp'" class="flex flex-col items-center py-3 bg-red-50 rounded-xl active:bg-red-100">
+                    <i class="fas fa-heartbeat text-2xl text-primary-red mb-1"></i>
+                    <span class="text-xs font-medium text-gray-700">测血压</span>
+                </button>
+                <button onclick="location.href='blood-pressure.html?mode=bs'" class="flex flex-col items-center py-3 bg-purple-50 rounded-xl active:bg-purple-100">
+                    <i class="fas fa-tint text-2xl text-purple-500 mb-1"></i>
+                    <span class="text-xs font-medium text-gray-700">测血糖</span>
+                </button>
+                <button onclick="location.href='medicine.html'" class="flex flex-col items-center py-3 bg-green-50 rounded-xl active:bg-green-100">
+                    <i class="fas fa-plus-circle text-2xl text-primary-green mb-1"></i>
+                    <span class="text-xs font-medium text-gray-700">添加</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部导航 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-card-white border-t border-gray-200 px-2 py-2 z-50">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center py-1 px-3 text-primary-blue">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs font-medium">首页</span>
+            </a>
+            <a href="medicine.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-pills text-xl"></i>
+                <span class="text-xs">药品</span>
+            </a>
+            <a href="blood-pressure.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-heartbeat text-xl"></i>
+                <span class="text-xs">测量</span>
+            </a>
+            <a href="analytics.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-chart-line text-xl"></i>
+                <span class="text-xs">数据</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs">我的</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        // 大字体提示弹窗
+        function showBigAlert(message) {
+            document.getElementById('bigAlertText').textContent = message;
+            document.getElementById('bigAlert').classList.remove('hidden');
+        }
+        function closeBigAlert() {
+            document.getElementById('bigAlert').classList.add('hidden');
+        }
+
+        // 请求通知权限
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        showBigAlert('已开启通知权限！');
+                    }
+                });
+            } else {
+                showBigAlert('您的浏览器不支持通知功能');
+            }
+        }
+
+        // 获取当前时段
+        function getCurrentPeriod() {
+            const hour = new Date().getHours();
+            if (hour >= 5 && hour < 12) return { key: 'morning', text: '早间', icon: 'fa-sun' };
+            if (hour >= 12 && hour < 18) return { key: 'noon', text: '午间', icon: 'fa-cloud-sun' };
+            return { key: 'evening', text: '晚间', icon: 'fa-moon' };
+        }
+
+        // 渲染当前时段提醒
+        function renderPeriodAlert() {
+            const period = getCurrentPeriod();
+            const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+            
+            // 只获取当前时段且未服用的药品
+            const pending = medicines.filter(m => 
+                m.time === period.key && 
+                !m.taken && 
+                m.frequency !== 'once'
+            );
+            
+            const container = document.getElementById('periodAlert');
+            
+            if (pending.length === 0) {
+                container.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas ${period.icon} text-3xl mr-3"></i>
+                            <div>
+                                <p class="font-bold text-lg">现在是${period.text}</p>
+                                <p class="text-sm opacity-90">${period.text}暂无待服药品</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-check-circle text-3xl opacity-50"></i>
+                    </div>
+                `;
+            } else {
+                const names = pending.slice(0, 2).map(m => m.name).join('、');
+                const more = pending.length > 2 ? `等${pending.length}种` : '';
+                container.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas ${period.icon} text-3xl mr-3"></i>
+                            <div>
+                                <p class="font-bold text-lg">${period.text}服药提醒</p>
+                                <p class="text-sm opacity-90">${names}${more}待服用</p>
+                            </div>
+                        </div>
+                        <button onclick="takePeriodMedicine('${period.key}')" class="px-4 py-2 bg-white text-primary-orange rounded-xl font-bold text-sm">
+                            <i class="fas fa-check mr-1"></i>立即服用
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // 一键服用当前时段药品
+        function takePeriodMedicine(period) {
+            const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+            medicines.forEach(m => {
+                if (m.time === period && !m.taken && m.frequency !== 'once') {
+                    m.taken = true;
+                    m.takenTime = new Date().toISOString();
+                }
+            });
+            localStorage.setItem('medicines', JSON.stringify(medicines));
+            renderPeriodAlert();
+            updateStats();
+            showBigAlert('已记录服药！');
+        }
+
+        // 一键服用所有待服药
+        function takeAllPending() {
+            const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+            let count = 0;
+            medicines.forEach(m => {
+                if (!m.taken && m.frequency !== 'once') {
+                    m.taken = true;
+                    m.takenTime = new Date().toISOString();
+                    count++;
+                }
+            });
+            if (count > 0) {
+                localStorage.setItem('medicines', JSON.stringify(medicines));
+                renderPeriodAlert();
+                renderPendingMeds();
+                updateStats();
+                showBigAlert(`已记录${count}项服药！`);
+            } else {
+                showBigAlert('暂无待服药品');
+            }
+        }
+
+        // 渲染待服药列表
+        function renderPendingMeds() {
+            const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+            const pending = medicines.filter(m => !m.taken && m.frequency !== 'once');
+            
+            document.getElementById('pendingCount').textContent = `${pending.length}项`;
+            
+            const container = document.getElementById('pendingMeds');
+            
+            if (pending.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 text-gray-500">
+                        <i class="fas fa-check-circle text-4xl text-green-300 mb-2"></i>
+                        <p class="text-base">今日药品已全部服用</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = pending.map(m => {
+                const timeText = { morning: '早', noon: '午', evening: '晚' }[m.time] || '早';
+                const condText = { before: '饭前', after: '饭后', fasting: '空腹' }[m.condition] || '饭后';
+                const timeIcon = { morning: 'fa-sun text-yellow-500', noon: 'fa-cloud-sun text-orange-400', evening: 'fa-moon text-blue-400' }[m.time] || 'fa-sun';
+                
+                return `
+                    <div class="flex items-center justify-between py-2 bg-orange-50 rounded-xl px-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-primary-orange rounded-full flex items-center justify-center">
+                                <i class="fas fa-pills text-white"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">${m.name}</p>
+                                <p class="text-xs text-gray-500">
+                                    <i class="fas ${timeIcon} mr-1"></i>${timeText} · ${m.qty || 1}${m.unit || '片'} · ${condText}
+                                </p>
+                            </div>
+                        </div>
+                        <button onclick="takeMedicine(${m.id || medicines.indexOf(m)})" class="px-3 py-2 bg-primary-blue text-white rounded-lg text-sm font-bold">
+                            服用
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 单独服用某个药品
+        function takeMedicine(index) {
+            const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+            medicines[index].taken = true;
+            medicines[index].takenTime = new Date().toISOString();
+            localStorage.setItem('medicines', JSON.stringify(medicines));
+            renderPeriodAlert();
+            renderPendingMeds();
+            updateStats();
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+            const bpRecords = JSON.parse(localStorage.getItem('bpRecords')) || [];
+            const today = new Date().toISOString().slice(0, 10);
+            
+            const todayMeds = medicines.filter(m => m.taken);
+            const todayBP = bpRecords.filter(r => r.date.includes(today));
+            const pending = medicines.filter(m => !m.taken && m.frequency !== 'once');
+            
+            document.getElementById('todayMedicine').textContent = todayMeds.length;
+            document.getElementById('todayBP').textContent = todayBP.length;
+            document.getElementById('todayPending').textContent = pending.length;
+        }
+
+        // 加载用户信息
+        function loadProfile() {
+            const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+            if (profile.name) {
+                document.getElementById('headerName').textContent = profile.name;
+            }
+            if (profile.age) {
+                document.getElementById('headerInfo').textContent = `${profile.age}岁 · ${profile.gender || '男'}`;
+            }
+        }
+
+        // 登录检查
+        function checkLogin() {
+            const userInfo = localStorage.getItem('userInfo');
+            if (!userInfo) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                localStorage.removeItem('userInfo');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // 初始化
+        if (checkLogin()) {
+            loadProfile();
+            renderPeriodAlert();
+            renderPendingMeds();
+            updateStats();
+        }
+
+        // 每分钟刷新一次
+        setInterval(() => {
+            if (checkLogin()) {
+                renderPeriodAlert();
+            }
+        }, 60000);
+    </script>
+</body>
+</html>

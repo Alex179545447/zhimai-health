@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>就医提醒 - AI健康助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-orange': '#F97316',
+                        'primary-blue': '#3B82F6',
+                        'primary-red': '#EF4444',
+                        'primary-green': '#22C55E',
+                        'primary-purple': '#8B5CF6',
+                        'bg-light': '#F1F5F9',
+                        'card-white': '#FFFFFF'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .card-radius { border-radius: 16px; }
+    </style>
+</head>
+<body class="bg-bg-light min-h-screen pb-24">
+    <!-- 大字体提示弹窗 -->
+    <div id="bigAlert" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-6">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl">
+            <p id="bigAlertText" class="text-2xl font-bold text-gray-800 text-center leading-relaxed whitespace-pre-line"></p>
+            <button onclick="closeBigAlert()" class="w-full mt-6 py-4 bg-primary-purple text-white text-xl font-bold rounded-2xl active:scale-95">
+                确定
+            </button>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <header class="bg-primary-purple text-white px-4 py-3 sticky top-0 z-50">
+        <div class="flex items-center justify-between">
+            <a href="index.html" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-lg font-bold">就医提醒</h1>
+            <button onclick="showAllReminders()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center" title="查看所有提醒">
+                <i class="fas fa-bell"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- 切换标签 -->
+    <div class="bg-card-white px-3 py-2 shadow-sm flex">
+        <button onclick="switchTab('register')" id="tabRegister" class="flex-1 py-3 text-base font-bold rounded-xl bg-primary-orange text-white mr-1">
+            <i class="fas fa-ticket-alt mr-1"></i>挂号提醒
+        </button>
+        <button onclick="switchTab('hospital')" id="tabHospital" class="flex-1 py-3 text-base font-bold rounded-xl bg-gray-100 text-gray-600 ml-1">
+            <i class="fas fa-hospital mr-1"></i>就医提醒
+        </button>
+    </div>
+
+    <!-- 挂号提醒内容 -->
+    <div id="registerContent" class="px-3 py-3">
+        <!-- 快速添加 -->
+        <button onclick="showRegisterModal()" class="w-full py-4 bg-primary-orange text-white text-lg font-bold rounded-xl mb-3">
+            <i class="fas fa-plus mr-2"></i>添加挂号提醒
+        </button>
+
+        <!-- 说明 -->
+        <div class="bg-card-white card-radius p-3 shadow-sm mb-3">
+            <p class="text-sm text-gray-600">
+                <i class="fas fa-info-circle text-primary-orange mr-1"></i>
+                挂号提醒帮您在放号时间抢号，设定提醒后系统会在指定时间通知您
+            </p>
+        </div>
+
+        <!-- 挂号列表 -->
+        <h3 class="text-base font-bold text-gray-800 mb-2">
+            <i class="fas fa-list text-gray-500 mr-2"></i>我的挂号提醒 (<span id="registerCount">0</span>)
+        </h3>
+        <div id="registerList" class="space-y-2"></div>
+    </div>
+
+    <!-- 就医提醒内容 -->
+    <div id="hospitalContent" class="px-3 py-3 hidden">
+        <!-- 快速添加 -->
+        <button onclick="showHospitalModal()" class="w-full py-4 bg-primary-green text-white text-lg font-bold rounded-xl mb-3">
+            <i class="fas fa-plus mr-2"></i>添加就医提醒
+        </button>
+
+        <!-- 说明 -->
+        <div class="bg-card-white card-radius p-3 shadow-sm mb-3">
+            <p class="text-sm text-gray-600">
+                <i class="fas fa-clock text-primary-green mr-1"></i>
+                就医提醒帮您在就诊前收到通知，提醒您提前出发，按时就医
+            </p>
+        </div>
+
+        <!-- 就医列表 -->
+        <h3 class="text-base font-bold text-gray-800 mb-2">
+            <i class="fas fa-list text-gray-500 mr-2"></i>我的就医提醒 (<span id="hospitalCount">0</span>)
+        </h3>
+        <div id="hospitalList" class="space-y-2"></div>
+    </div>
+
+    <!-- 添加挂号提醒弹窗 -->
+    <div id="registerModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
+        <div class="bg-card-white rounded-t-2xl w-full max-w-lg p-5 pb-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold">添加挂号提醒</h2>
+                <button onclick="closeRegisterModal()" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- 医院名称 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">医院名称 *</label>
+                    <input type="text" id="regHospital" placeholder="如：市第一医院" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-orange focus:outline-none">
+                </div>
+
+                <!-- 科室 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">科室 *</label>
+                    <input type="text" id="regDept" placeholder="如：心内科" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-orange focus:outline-none">
+                </div>
+
+                <!-- 医生 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">医生（可选）</label>
+                    <input type="text" id="regDoctor" placeholder="如：张主任" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-orange focus:outline-none">
+                </div>
+
+                <!-- 放号时间 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">放号时间 *</label>
+                    <input type="datetime-local" id="regTime" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-orange focus:outline-none">
+                </div>
+
+                <!-- 备注 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">备注（可选）</label>
+                    <input type="text" id="regNote" placeholder="如：提前准备好医保卡" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-orange focus:outline-none">
+                </div>
+
+                <button onclick="saveRegister()" class="w-full py-4 bg-primary-orange text-white text-lg font-bold rounded-xl active:scale-95">
+                    <i class="fas fa-bell mr-2"></i>设置提醒
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加就医提醒弹窗 -->
+    <div id="hospitalModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
+        <div class="bg-card-white rounded-t-2xl w-full max-w-lg p-5 pb-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold">添加就医提醒</h2>
+                <button onclick="closeHospitalModal()" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- 医院名称 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">医院名称 *</label>
+                    <input type="text" id="hospHospital" placeholder="如：市第一医院" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-green focus:outline-none">
+                </div>
+
+                <!-- 科室 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">科室 *</label>
+                    <input type="text" id="hospDept" placeholder="如：心内科" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-green focus:outline-none">
+                </div>
+
+                <!-- 医生 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">医生（可选）</label>
+                    <input type="text" id="hospDoctor" placeholder="如：张主任" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-green focus:outline-none">
+                </div>
+
+                <!-- 就诊时间 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">就诊时间 *</label>
+                    <input type="datetime-local" id="hospTime" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-green focus:outline-none">
+                </div>
+
+                <!-- 提前提醒时间 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">提前提醒</label>
+                    <select id="hospAdvance" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-green focus:outline-none">
+                        <option value="30">30分钟前</option>
+                        <option value="60">1小时前</option>
+                        <option value="120" selected>2小时前</option>
+                        <option value="180">3小时前</option>
+                        <option value="1440">1天前</option>
+                    </select>
+                </div>
+
+                <!-- 备注 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">备注（可选）</label>
+                    <input type="text" id="hospNote" placeholder="如：需空腹、带身份证" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-green focus:outline-none">
+                </div>
+
+                <button onclick="saveHospital()" class="w-full py-4 bg-primary-green text-white text-lg font-bold rounded-xl active:scale-95">
+                    <i class="fas fa-calendar-check mr-2"></i>设置就医提醒
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-card-white border-t border-gray-200 px-2 py-2 z-40">
+        <div class="flex justify-around items-center max-w-md mx-auto">
+            <a href="index.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs">首页</span>
+            </a>
+            <a href="medicine.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-pills text-xl"></i>
+                <span class="text-xs">药品</span>
+            </a>
+            <a href="blood-pressure.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-heartbeat text-xl"></i>
+                <span class="text-xs">测量</span>
+</a>
+            <a href="analytics.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-chart-line text-xl"></i>
+                <span class="text-xs">数据</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs">我的</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        let currentTab = 'register';
+        let registerReminders = JSON.parse(localStorage.getItem('registerReminders')) || [];
+        let hospitalReminders = JSON.parse(localStorage.getItem('hospitalReminders')) || [];
+
+        // 大字体提示弹窗
+        function showBigAlert(message) {
+            document.getElementById('bigAlertText').textContent = message;
+            document.getElementById('bigAlert').classList.remove('hidden');
+        }
+        function closeBigAlert() {
+            document.getElementById('bigAlert').classList.add('hidden');
+        }
+
+        function requestNotification() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(perm => {
+                    if (perm === 'granted') {
+                        showBigAlert('已开启提醒通知！');
+                        scheduleAllReminders();
+                    }
+                });
+            } else {
+                showBigAlert('您的浏览器不支持通知功能');
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const regTab = document.getElementById('tabRegister');
+            const hospTab = document.getElementById('tabHospital');
+            
+            if (tab === 'register') {
+                regTab.className = 'flex-1 py-3 text-base font-bold rounded-xl bg-primary-orange text-white mr-1';
+                hospTab.className = 'flex-1 py-3 text-base font-bold rounded-xl bg-gray-100 text-gray-600 ml-1';
+                document.getElementById('registerContent').classList.remove('hidden');
+                document.getElementById('hospitalContent').classList.add('hidden');
+            } else {
+                hospTab.className = 'flex-1 py-3 text-base font-bold rounded-xl bg-primary-green text-white mr-1';
+                regTab.className = 'flex-1 py-3 text-base font-bold rounded-xl bg-gray-100 text-gray-600 ml-1';
+                document.getElementById('hospitalContent').classList.remove('hidden');
+                document.getElementById('registerContent').classList.add('hidden');
+            }
+        }
+
+        function showRegisterModal() {
+            document.getElementById('registerModal').classList.remove('hidden');
+            // 设置默认时间为明天早上8点
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(8, 0, 0, 0);
+            document.getElementById('regTime').value = tomorrow.toISOString().slice(0, 16);
+        }
+
+        function closeRegisterModal() {
+            document.getElementById('registerModal').classList.add('hidden');
+            document.getElementById('regHospital').value = '';
+            document.getElementById('regDept').value = '';
+            document.getElementById('regDoctor').value = '';
+            document.getElementById('regNote').value = '';
+        }
+
+        function showHospitalModal() {
+            document.getElementById('hospitalModal').classList.remove('hidden');
+            // 设置默认时间为一小时后
+            const hourLater = new Date();
+            hourLater.setHours(hourLater.getHours() + 1, 0, 0, 0);
+            document.getElementById('hospTime').value = hourLater.toISOString().slice(0, 16);
+        }
+
+        function closeHospitalModal() {
+            document.getElementById('hospitalModal').classList.add('hidden');
+            document.getElementById('hospHospital').value = '';
+            document.getElementById('hospDept').value = '';
+            document.getElementById('hospDoctor').value = '';
+            document.getElementById('hospNote').value = '';
+        }
+
+        function saveRegister() {
+            const hospital = document.getElementById('regHospital').value.trim();
+            const dept = document.getElementById('regDept').value.trim();
+            const doctor = document.getElementById('regDoctor').value.trim();
+            const time = document.getElementById('regTime').value;
+            const note = document.getElementById('regNote').value.trim();
+
+            if (!hospital || !dept || !time) {
+                alert('请填写必填项（医院、科室、放号时间）');
+                return;
+            }
+
+            registerReminders.unshift({
+                id: Date.now(),
+                hospital,
+                department: dept,
+                doctor,
+                time,
+                note,
+                done: false
+            });
+
+            localStorage.setItem('registerReminders', JSON.stringify(registerReminders));
+            closeRegisterModal();
+            renderRegisterList();
+            scheduleNotification(`${hospital} - ${dept}${doctor ? ' - ' + doctor : ''} 放号提醒`, time);
+            showBigAlert('挂号提醒已设置！');
+        }
+
+        function saveHospital() {
+            const hospital = document.getElementById('hospHospital').value.trim();
+            const dept = document.getElementById('hospDept').value.trim();
+            const doctor = document.getElementById('hospDoctor').value.trim();
+            const time = document.getElementById('hospTime').value;
+            const advance = parseInt(document.getElementById('hospAdvance').value);
+            const note = document.getElementById('hospNote').value.trim();
+
+            if (!hospital || !dept || !time) {
+                showBigAlert('请填写必填项（医院、科室、就诊时间）');
+                return;
+            }
+
+            hospitalReminders.unshift({
+                id: Date.now(),
+                hospital,
+                department: dept,
+                doctor,
+                time,
+                advance,
+                note,
+                done: false
+            });
+
+            localStorage.setItem('hospitalReminders', JSON.stringify(hospitalReminders));
+            closeHospitalModal();
+            renderHospitalList();
+            
+            // 计算提前提醒时间
+            const remindTime = new Date(new Date(time).getTime() - advance * 60000);
+            if (remindTime > new Date()) {
+                scheduleNotification(`${hospital} - ${dept}${doctor ? ' - ' + doctor : ''} 就医提醒\n请提前出发，按时就医！`, remindTime.toISOString());
+            }
+            showBigAlert('就医提醒已设置！');
+        }
+
+        function scheduleNotification(content, time) {
+            if (Notification.permission === 'granted') {
+                const t = new Date(time).getTime();
+                if (t > Date.now()) {
+                    setTimeout(() => {
+                        new Notification('健康提醒', { body: content });
+                    }, t - Date.now());
+                }
+            }
+        }
+
+        function scheduleAllReminders() {
+            [...registerReminders, ...hospitalReminders].forEach(r => {
+                if (!r.done && r.time) {
+                    const time = new Date(r.time).getTime();
+                    if (time > Date.now()) {
+                        const content = r.hospital + ' - ' + r.department + (r.doctor ? ' - ' + r.doctor : '');
+                        scheduleNotification(content, r.time);
+                    }
+                }
+            });
+        }
+
+        function toggleRegisterDone(id) {
+            const r = registerReminders.find(x => x.id === id);
+            if (r) {
+                if (!r.done) {
+                    // 挂号成功，移至就医提醒
+                    const hospRecord = {
+                        id: Date.now(),
+                        hospital: r.hospital,
+                        department: r.department,
+                        doctor: r.doctor,
+                        time: r.time,
+                        advance: 120,
+                        note: r.note || '挂号成功，请按时就医',
+                        done: false,
+                        fromRegister: true,
+                        registeredAt: new Date().toISOString()
+                    };
+                    hospitalReminders.unshift(hospRecord);
+                    localStorage.setItem('hospitalReminders', JSON.stringify(hospitalReminders));
+                    
+                    // 删除挂号记录
+                    registerReminders = registerReminders.filter(x => x.id !== id);
+                    localStorage.setItem('registerReminders', JSON.stringify(registerReminders));
+                    
+                    // 显示成功弹窗
+                    alert('恭喜您挂号成功！\n\n相关信息已更新至就医提醒，\n请您留意时间前往就医。\n\n医院：' + r.hospital + '\n科室：' + r.department + (r.doctor ? '\n医生：' + r.doctor : '') + '\n就诊时间：' + new Date(r.time).toLocaleString('zh-CN'));
+                    
+                    renderRegisterList();
+                    renderHospitalList();
+                } else {
+                    r.done = false;
+                    localStorage.setItem('registerReminders', JSON.stringify(registerReminders));
+                    renderRegisterList();
+                }
+            }
+        }
+
+        function toggleHospitalDone(id) {
+            const r = hospitalReminders.find(x => x.id === id);
+            if (r) {
+                r.done = !r.done;
+                localStorage.setItem('hospitalReminders', JSON.stringify(hospitalReminders));
+                renderHospitalList();
+            }
+        }
+
+        // 显示所有提醒列表
+        function showAllReminders() {
+            const allReminders = [];
+            
+            registerReminders.forEach(r => {
+                allReminders.push({
+                    type: '挂号',
+                    hospital: r.hospital,
+                    dept: r.department,
+                    doctor: r.doctor,
+                    time: r.time,
+                    done: r.done,
+                    status: r.done ? '已完成' : '待抢号'
+                });
+            });
+            
+            hospitalReminders.forEach(r => {
+                allReminders.push({
+                    type: '就医',
+                    hospital: r.hospital,
+                    dept: r.department,
+                    doctor: r.doctor,
+                    time: r.time,
+                    done: r.done,
+                    status: r.done ? '已完成' : '待就医'
+                });
+            });
+            
+            // 按时间排序
+            allReminders.sort((a, b) => new Date(a.time) - new Date(b.time));
+            
+            if (allReminders.length === 0) {
+                alert('暂无提醒设置');
+                return;
+            }
+            
+            let msg = '【所有提醒】\n\n';
+            allReminders.forEach((r, i) => {
+                const date = new Date(r.time).toLocaleString('zh-CN', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
+                msg += (i+1) + '. [' + r.type + '] ' + r.hospital + ' - ' + r.dept + '\n   时间：' + date + '\n   状态：' + r.status + '\n\n';
+            });
+            
+            alert(msg);
+        }
+
+        function deleteRegister(id) {
+            if (confirm('确定删除这个挂号提醒？')) {
+                registerReminders = registerReminders.filter(r => r.id !== id);
+                localStorage.setItem('registerReminders', JSON.stringify(registerReminders));
+                renderRegisterList();
+            }
+        }
+
+        function deleteHospital(id) {
+            if (confirm('确定删除这个就医提醒？')) {
+                hospitalReminders = hospitalReminders.filter(r => r.id !== id);
+                localStorage.setItem('hospitalReminders', JSON.stringify(hospitalReminders));
+                renderHospitalList();
+            }
+        }
+
+        function renderRegisterList() {
+            const container = document.getElementById('registerList');
+            document.getElementById('registerCount').textContent = registerReminders.length;
+
+            if (registerReminders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-ticket-alt text-5xl text-gray-300 mb-3"></i>
+                        <p class="text-lg">暂无挂号提醒</p>
+                        <p class="text-sm">点击上方按钮添加</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = registerReminders.map(r => `
+                <div class="bg-card-white card-radius p-4 shadow-sm ${r.done ? 'opacity-60' : ''}">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <i class="fas fa-hospital text-primary-orange"></i>
+                                <span class="font-bold text-gray-800">${r.hospital}</span>
+                            </div>
+                            <p class="text-gray-600 ml-6">
+                                <i class="fas fa-stethoscope mr-1"></i>${r.department}
+                                ${r.doctor ? `<span class="ml-2"><i class="fas fa-user-md mr-1"></i>${r.doctor}</span>` : ''}
+                            </p>
+                        </div>
+                        <button onclick="toggleRegisterDone(${r.id})" class="px-3 py-2 rounded-lg text-sm font-bold ${r.done ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}">
+                            ${r.done ? '<i class="fas fa-check"></i> 已完成' : '待抢号'}
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between bg-orange-50 p-2 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-clock text-primary-orange mr-2"></i>
+                            <span class="text-primary-orange font-bold">${new Date(r.time).toLocaleString('zh-CN')}</span>
+                        </div>
+                        <span class="text-sm text-gray-500">放号时间</span>
+                    </div>
+                    ${r.note ? `<p class="text-sm text-gray-500 mt-2 bg-gray-50 p-2 rounded"><i class="fas fa-info-circle mr-1"></i>${r.note}</p>` : ''}
+                    <button onclick="deleteRegister(${r.id})" class="mt-2 w-full py-2 text-red-500 text-sm rounded-lg bg-red-50">
+                        <i class="fas fa-trash mr-1"></i>删除
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function renderHospitalList() {
+            const container = document.getElementById('hospitalList');
+            document.getElementById('hospitalCount').textContent = hospitalReminders.length;
+
+            if (hospitalReminders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-calendar-check text-5xl text-gray-300 mb-3"></i>
+                        <p class="text-lg">暂无就医提醒</p>
+                        <p class="text-sm">点击上方按钮添加</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = hospitalReminders.map(r => `
+                <div class="bg-card-white card-radius p-4 shadow-sm ${r.done ? 'opacity-60' : ''}">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <i class="fas fa-hospital text-primary-green"></i>
+                                <span class="font-bold text-gray-800">${r.hospital}</span>
+                            </div>
+                            <p class="text-gray-600 ml-6">
+                                <i class="fas fa-stethoscope mr-1"></i>${r.department}
+                                ${r.doctor ? `<span class="ml-2"><i class="fas fa-user-md mr-1"></i>${r.doctor}</span>` : ''}
+                            </p>
+                        </div>
+                        <button onclick="toggleHospitalDone(${r.id})" class="px-3 py-2 rounded-lg text-sm font-bold ${r.done ? 'bg-green-100 text-green-600' : 'bg-green-100 text-primary-green'}">
+                            ${r.done ? '<i class="fas fa-check"></i> 已完成' : '待就医'}
+                        </button>
+                    </div>
+                    <div class="flex items-center justify-between bg-green-50 p-2 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar text-primary-green mr-2"></i>
+                            <span class="text-primary-green font-bold">${new Date(r.time).toLocaleString('zh-CN')}</span>
+                        </div>
+                        <span class="text-sm text-gray-500">提前${r.advance >= 60 ? (r.advance / 60) + '小时' : r.advance + '分钟'}</span>
+                    </div>
+                    ${r.note ? `<p class="text-sm text-gray-500 mt-2 bg-gray-50 p-2 rounded"><i class="fas fa-info-circle mr-1"></i>${r.note}</p>` : ''}
+                    <button onclick="deleteHospital(${r.id})" class="mt-2 w-full py-2 text-red-500 text-sm rounded-lg bg-red-50">
+                        <i class="fas fa-trash mr-1"></i>删除
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        renderRegisterList();
+        renderHospitalList();
+        
+        if (Notification.permission === 'granted') {
+            scheduleAllReminders();
+        }
+    </script>
+</body>
+</html>
