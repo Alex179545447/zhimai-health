@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      # 2. 部署到服务器 (使用ssh-action同时处理scp和ssh命令)
+      # 2. 部署到服务器
       - name: Deploy to Alibaba Cloud ECS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -22,16 +22,11 @@ jobs:
           username: ${{ secrets.ECS_USER }}
           password: ${{ secrets.ECS_PASSWORD }}
           port: ${{ secrets.ECS_PORT }}
-          command: |
+          script: |
             # 创建网站目录
             sudo mkdir -p /www/wwwroot/health.zhimai-ai.cn
             
-            # 进入临时目录
-            cd /tmp
-            rm -rf health-app 2>/dev/null
-            mkdir -p health-app
-            
-            # 使用rsync同步代码（如果可用）或直接git clone
+            # 进入网站目录并拉取代码
             cd /www/wwwroot/health.zhimai-ai.cn
             sudo git init 2>/dev/null || true
             sudo git remote add origin https://github.com/Alex179545447/zhimai-health.git 2>/dev/null || true
