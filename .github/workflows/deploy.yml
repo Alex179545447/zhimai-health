@@ -5,11 +5,6 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-env:
-  ECS_HOST: ${{ secrets.ECS_HOST }}
-  ECS_USER: ${{ secrets.ECS_USER }}
-  ECS_PORT: ${{ secrets.ECS_PORT }}
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -19,66 +14,44 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      # 2. 创建部署包
-      - name: Create deployment package
-        run: |
-          mkdir -p dist
-          # 复制所有文件，排除敏感目录
-          rsync -av --exclude='.git' --exclude='.github' --exclude='node_modules' \
-            --exclude='*.log' --exclude='.DS_Store' --exclude='deploy*' \
-            --exclude='README*' --exclude='*.md' \
-            . dist/
-          tar -czf health-app.tar.gz -C dist .
-          
-      # 3. 部署到服务器
+      # 2. 部署到服务器 (使用ssh-action同时处理scp和ssh命令)
       - name: Deploy to Alibaba Cloud ECS
-        uses: dawidd6/action-scp@v3
-        with:
-          host: ${{ secrets.ECS_HOST }}
-          user: ${{ secrets.ECS_USER }}
-          password: ${{ secrets.ECS_PASSWORD }}
-          port: ${{ secrets.ECS_PORT }}
-          local: health-app.tar.gz
-          remote: /tmp/health-app.tar.gz
-          
-      # 4. 在服务器上解压并部署
-      - name: Extract and Deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.ECS_HOST }}
           username: ${{ secrets.ECS_USER }}
           password: ${{ secrets.ECS_PASSWORD }}
           port: ${{ secrets.ECS_PORT }}
-          script: |
+          command: |
             # 创建网站目录
             sudo mkdir -p /www/wwwroot/health.zhimai-ai.cn
             
-            # 解压部署包
+            # 进入临时目录
             cd /tmp
-            sudo tar -xzf health-app.tar.gz
-            sudo cp -r /tmp/www/wwwroot/health.zhimai-ai.cn/ /www/wwwroot/ 2>/dev/null || \
-            sudo cp -r /tmp/* /www/wwwroot/health.zhimai-ai.cn/
+            rm -rf health-app 2>/dev/null
+            mkdir -p health-app
             
-            # 如果目录结构不同，直接复制
-            if [ ! -f /www/wwwroot/health.zhimai-ai.cn/index.html ]; then
-              sudo cp -r /tmp/* /www/wwwroot/health.zhimai-ai.cn/
-            fi
+            # 使用rsync同步代码（如果可用）或直接git clone
+            cd /www/wwwroot/health.zhimai-ai.cn
+            sudo git init 2>/dev/null || true
+            sudo git remote add origin https://github.com/Alex179545447/zhimai-health.git 2>/dev/null || true
+            sudo git fetch origin main
+            sudo git reset --hard origin/main
             
             # 设置权限
             sudo chown -R www:www /www/wwwroot/health.zhimai-ai.cn
             sudo chmod -R 755 /www/wwwroot/health.zhimai-ai.cn
             
             # 重启Nginx
-            sudo systemctl reload nginx
+            sudo systemctl reload nginx 2>/dev/null || sudo nginx -s reload 2>/dev/null || true
             
-            # 清理临时文件
-            rm -f /tmp/health-app.tar.gz
-            rm -rf /tmp/www
-            
-            echo "✅ 部署完成!"
+            echo "========================================"
+            echo "🎉 部署完成!"
+            echo "========================================"
             echo "网站地址: https://health.zhimai-ai.cn"
+            echo "========================================"
 
-  # 5. 验证部署
+  # 3. 验证部署
   verify:
     needs: build-and-deploy
     runs-on: ubuntu-latest
