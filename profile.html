@@ -178,6 +178,22 @@
                     <input type="number" id="editAge" placeholder="请输入年龄" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">常住地</label>
+                    <input type="text" id="editCity" placeholder="如：北京市朝阳区" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">手机号码</label>
+                    <input type="tel" id="editPhone" placeholder="请输入手机号" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">紧急联系人</label>
+                    <input type="text" id="editEmergencyName" placeholder="请输入紧急联系人姓名" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">紧急联系电话</label>
+                    <input type="tel" id="editEmergencyPhone" placeholder="请输入紧急联系人电话" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">性别</label>
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="selectGender('男')" id="maleBtn" class="py-3 bg-primary-blue text-white rounded-xl font-medium">男</button>
@@ -202,8 +218,9 @@
             </div>
             <div class="space-y-3">
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">过敏史</label>
-                    <input type="text" id="editAllergy" placeholder="如：青霉素过敏" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                    <label class="block text-sm font-medium text-gray-600 mb-1">药物过敏史</label>
+                    <input type="text" id="editAllergy" placeholder="如：青霉素过敏、阿司匹林" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                    <p class="text-xs text-orange-500 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>设置后，服药时会提醒您注意</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">既往病史</label>
@@ -236,21 +253,8 @@
             <div class="space-y-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">药品名称 *</label>
-                    <input type="text" id="commonMedName" placeholder="如：硝苯地平" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">剂量</label>
-                        <input type="text" id="commonMedDose" placeholder="如：1片" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">用法</label>
-                        <select id="commonMedUsage" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
-                            <option value="饭后">饭后</option>
-                            <option value="饭前">饭前</option>
-                            <option value="空腹">空腹</option>
-                        </select>
-                    </div>
+                    <input type="text" id="commonMedName" placeholder="如：硝苯地平、阿莫西林" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                    <p class="text-xs text-gray-400 mt-1">只需输入药品名称，方便快速调取</p>
                 </div>
                 <button onclick="saveCommonMed()" class="w-full py-4 bg-primary-purple text-white text-lg font-bold rounded-xl">
                     <i class="fas fa-plus mr-2"></i>添加
@@ -274,9 +278,9 @@
                 <i class="fas fa-heartbeat text-xl"></i>
                 <span class="text-xs">测量</span>
             </a>
-            <a href="analytics.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
-                <i class="fas fa-chart-line text-xl"></i>
-                <span class="text-xs">数据</span>
+            <a href="calendar.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-calendar text-xl"></i>
+                <span class="text-xs">日历</span>
             </a>
             <a href="profile.html" class="flex flex-col items-center py-1 px-3 text-primary-blue">
                 <i class="fas fa-user text-xl"></i>
@@ -330,13 +334,17 @@
 
             container.innerHTML = commonMeds.map((m, i) => `
                 <div class="flex items-center justify-between bg-purple-50 p-3 rounded-xl">
-                    <div>
+                    <div class="flex-1">
                         <p class="font-bold">${m.name}</p>
-                        <p class="text-sm text-gray-500">${m.dose} · ${m.usage}</p>
                     </div>
-                    <button onclick="deleteCommonMed(${i})" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-trash text-sm"></i>
-                    </button>
+                    <div class="flex space-x-2">
+                        <button onclick="quickAddToMeds('${m.name}')" class="px-3 py-1 bg-primary-blue text-white text-sm rounded-lg">
+                            <i class="fas fa-plus mr-1"></i>添加
+                        </button>
+                        <button onclick="deleteCommonMed(${i})" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -345,6 +353,10 @@
             const profile = JSON.parse(localStorage.getItem('profile') || '{}');
             document.getElementById('editName').value = profile.name || '';
             document.getElementById('editAge').value = profile.age || '';
+            document.getElementById('editCity').value = profile.city || '';
+            document.getElementById('editPhone').value = profile.phone || '';
+            document.getElementById('editEmergencyName').value = profile.emergencyName || '';
+            document.getElementById('editEmergencyPhone').value = profile.emergencyPhone || '';
             selectedGender = profile.gender || '男';
             updateGenderButtons();
             document.getElementById('editProfileModal').classList.remove('hidden');
@@ -384,15 +396,22 @@
         function saveBasicProfile() {
             const name = document.getElementById('editName').value.trim();
             const age = document.getElementById('editAge').value.trim();
+            const city = document.getElementById('editCity').value.trim();
+            const phone = document.getElementById('editPhone').value.trim();
+            const emergencyName = document.getElementById('editEmergencyName').value.trim();
+            const emergencyPhone = document.getElementById('editEmergencyPhone').value.trim();
             
             const profile = {
                 name: name || '用户',
                 age: age,
-                gender: selectedGender
+                gender: selectedGender,
+                city: city,
+                phone: phone,
+                emergencyName: emergencyName,
+                emergencyPhone: emergencyPhone
             };
             
             localStorage.setItem('profile', JSON.stringify(profile));
-            localStorage.setItem('healthRecord', JSON.stringify(JSON.parse(localStorage.getItem('healthRecord') || '{}')));
             
             // 更新healthRecord中的gender
             let healthRecord = JSON.parse(localStorage.getItem('healthRecord') || '{}');
@@ -422,8 +441,6 @@
 
         function saveCommonMed() {
             const name = document.getElementById('commonMedName').value.trim();
-            const dose = document.getElementById('commonMedDose').value.trim();
-            const usage = document.getElementById('commonMedUsage').value;
             
             if (!name) {
                 alert('请输入药品名称');
@@ -431,12 +448,11 @@
             }
             
             let commonMeds = JSON.parse(localStorage.getItem('commonMeds') || '[]');
-            commonMeds.push({ name, dose: dose || '1片', usage });
+            commonMeds.push({ name, addedAt: new Date().toISOString() });
             localStorage.setItem('commonMeds', JSON.stringify(commonMeds));
             
             closeModal('commonMedsModal');
             document.getElementById('commonMedName').value = '';
-            document.getElementById('commonMedDose').value = '';
             loadCommonMeds();
             alert('常用药品已添加！');
         }
@@ -448,6 +464,12 @@
                 localStorage.setItem('commonMeds', JSON.stringify(commonMeds));
                 loadCommonMeds();
             }
+        }
+
+        // 快速添加到我的药品
+        function quickAddToMeds(medName) {
+            // 跳转到药品页面并自动填充名称
+            window.location.href = 'medicine.html?add=' + encodeURIComponent(medName);
         }
 
         function exportData() {

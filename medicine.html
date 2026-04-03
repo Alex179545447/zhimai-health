@@ -121,7 +121,7 @@
     <div id="addModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
         <div class="bg-card-white rounded-t-2xl w-full max-w-lg p-5 pb-8 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold">添加药品</h2>
+                <h2 id="modalTitle" class="text-xl font-bold">添加药品</h2>
                 <button onclick="closeAddModal()" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                     <i class="fas fa-times"></i>
                 </button>
@@ -219,6 +219,15 @@
                     </div>
                 </div>
 
+                <!-- 开始日期 -->
+                <div id="startDateContainer" class="hidden">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">开始日期</label>
+                    <input type="date" id="startDate" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                    <p class="text-xs text-gray-400 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>设置后，系统将从该日期开始按设定频次计算提醒
+                    </p>
+                </div>
+
                 <!-- 备注 -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">备注（可选）</label>
@@ -226,7 +235,7 @@
                            class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                 </div>
 
-                <button onclick="addMedicine()" class="w-full py-4 bg-primary-blue text-white text-lg font-bold rounded-xl active:scale-95">
+                <button onclick="addMedicine()" id="addBtn" class="w-full py-4 bg-primary-blue text-white text-lg font-bold rounded-xl active:scale-95">
                     <i class="fas fa-plus mr-2"></i>添加药品
                 </button>
             </div>
@@ -256,9 +265,9 @@
                 <i class="fas fa-heartbeat text-xl"></i>
                 <span class="text-xs">测量</span>
             </a>
-            <a href="analytics.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
-                <i class="fas fa-chart-line text-xl"></i>
-                <span class="text-xs">数据</span>
+            <a href="calendar.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
+                <i class="fas fa-calendar text-xl"></i>
+                <span class="text-xs">日历</span>
             </a>
             <a href="profile.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
                 <i class="fas fa-user text-xl"></i>
@@ -285,9 +294,48 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
+            // 处理URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const addMed = urlParams.get('add');
+            if (addMed) {
+                showAddModal();
+                document.getElementById('medName').value = decodeURIComponent(addMed);
+            }
+            
             renderCurrentPeriodAlert();
             renderMedicines();
+            checkAllergyAlert();
         });
+
+        // 检查过敏药物提醒
+        function checkAllergyAlert() {
+            const healthRecord = JSON.parse(localStorage.getItem('healthRecord') || '{}');
+            const allergy = healthRecord.allergy || '';
+            if (!allergy) return;
+            
+            const allergyList = allergy.split(/[,，、]/).filter(a => a.trim());
+            const container = document.getElementById('currentPeriodAlert');
+            
+            if (allergyList.length > 0) {
+                // 在时段提醒后添加过敏提示
+                const existingAllergy = container.parentElement.querySelector('.allergy-alert');
+                if (!existingAllergy) {
+                    const allergyDiv = document.createElement('div');
+                    allergyDiv.className = 'allergy-alert bg-red-100 border border-red-300 text-red-700 px-4 py-3 mt-2 rounded-xl';
+                    allergyDiv.innerHTML = `
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-triangle text-red-500 mr-2 mt-1"></i>
+                            <div>
+                                <p class="font-bold text-sm"><i class="fas fa-allergies mr-1"></i>药物过敏提醒</p>
+                                <p class="text-xs mt-1">您对以下药物过敏：<strong>${allergyList.join('、')}</strong></p>
+                                <p class="text-xs mt-1 text-red-600">服药时请注意药物相互作用，如有不适请及时就医！</p>
+                            </div>
+                        </div>
+                    `;
+                    container.parentElement.insertBefore(allergyDiv, container.nextSibling);
+                }
+            }
+        }
 
         // 根据当前时间显示提醒
         function renderCurrentPeriodAlert() {
@@ -417,9 +465,14 @@
                             <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded">${freqText}</span>
                             ${m.note ? `<span class="px-2 py-1 bg-gray-50 text-gray-600 rounded">${m.note}</span>` : ''}
                         </div>
-                        <button onclick="deleteMedicine(${idx})" class="mt-2 w-full py-2 text-red-500 text-sm rounded-lg bg-red-50">
-                            <i class="fas fa-trash mr-1"></i>删除
-                        </button>
+                        <div class="flex space-x-2 mt-2">
+                            <button onclick="editMedicine(${idx})" class="flex-1 py-2 text-blue-500 text-sm rounded-lg bg-blue-50">
+                                <i class="fas fa-edit mr-1"></i>修改
+                            </button>
+                            <button onclick="deleteMedicine(${idx})" class="flex-1 py-2 text-red-500 text-sm rounded-lg bg-red-50">
+                                <i class="fas fa-trash mr-1"></i>删除
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -441,11 +494,25 @@
         }
 
         function toggleTaken(index) {
+            const med = medicines[index];
             medicines[index].taken = !medicines[index].taken;
             medicines[index].takenTime = medicines[index].taken ? new Date().toISOString() : null;
             localStorage.setItem('medicines', JSON.stringify(medicines));
             renderCurrentPeriodAlert();
             renderMedicines();
+            
+            // 如果标记为服用，显示中西药分开提醒
+            if (medicines[index].taken) {
+                const note = med.note || '';
+                const isChineseMed = /[中药|草药|中成药|丸|散|膏|丹|汤]/.test(med.name + note);
+                const isWesternMed = /[片|胶囊|注射|点滴|针剂]/.test(med.name + note);
+                
+                if (isChineseMed && isWesternMed) {
+                    showBigAlert('温馨提示：\n中西药需分开服用，建议间隔半小时以上！');
+                } else if (isChineseMed && !isWesternMed) {
+                    showBigAlert('温馨提示：\n中药建议饭前半小时或饭后一小时服用。');
+                }
+            }
         }
 
         function markAllTaken() {
@@ -480,7 +547,43 @@
             }
         }
 
+        // 编辑药品
+        let editingIndex = -1;
+        
+        function editMedicine(index) {
+            editingIndex = index;
+            const med = medicines[index];
+            
+            // 填充表单
+            document.getElementById('medName').value = med.name || '';
+            document.getElementById('medQty').value = med.qty || 1;
+            document.getElementById('medUnit').value = med.unit || '片';
+            document.getElementById('medNote').value = med.note || '';
+            document.getElementById('startDate').value = med.startDate || '';
+            
+            // 设置频次
+            document.getElementById('freqSelect').value = med.frequency || 'daily';
+            onFrequencyChange();
+            document.getElementById('customFreq').value = med.customFreqText || '';
+            
+            // 设置时间
+            selectedTimes = med.time ? med.time.split(',') : ['morning'];
+            updateTimeButtons();
+            
+            // 设置条件
+            selectedCondition = med.condition || 'after';
+            selectCondition(selectedCondition);
+            
+            // 显示模态框
+            document.getElementById('modalTitle').textContent = '修改药品';
+            document.getElementById('addBtn').innerHTML = '<i class="fas fa-check mr-2"></i>更新药品';
+            document.getElementById('addModal').classList.remove('hidden');
+        }
+
         function showAddModal() {
+            editingIndex = -1;
+            document.getElementById('modalTitle').textContent = '添加药品';
+            document.getElementById('addBtn').innerHTML = '<i class="fas fa-plus mr-2"></i>添加药品';
             document.getElementById('addModal').classList.remove('hidden');
         }
 
@@ -489,6 +592,13 @@
             document.getElementById('medName').value = '';
             document.getElementById('medQty').value = '1';
             document.getElementById('medNote').value = '';
+            document.getElementById('customFreq').value = '';
+            document.getElementById('startDate').value = '';
+            selectedTimes = ['morning'];
+            updateTimeButtons();
+            selectedCondition = 'after';
+            selectCondition('after');
+            editingIndex = -1;
         }
 
         function toggleTime(time) {
@@ -532,6 +642,7 @@
         function onFrequencyChange() {
             const select = document.getElementById('freqSelect');
             const customContainer = document.getElementById('customFreqContainer');
+            const startDateContainer = document.getElementById('startDateContainer');
             selectedFrequency = select.value;
             
             if (select.value === 'custom') {
@@ -539,6 +650,19 @@
                 document.getElementById('customFreq').focus();
             } else {
                 customContainer.classList.add('hidden');
+            }
+            
+            // 每周及以上频次显示开始日期选择
+            const needsStartDate = ['weekly', 'every2weeks', 'every3weeks', 'every4weeks', 'custom'].includes(select.value);
+            if (needsStartDate) {
+                startDateContainer.classList.remove('hidden');
+                // 默认设置为今天
+                if (!document.getElementById('startDate').value) {
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('startDate').value = today;
+                }
+            } else {
+                startDateContainer.classList.add('hidden');
             }
         }
 
@@ -602,6 +726,7 @@
             const qty = parseFloat(document.getElementById('medQty').value) || 1;
             const unit = document.getElementById('medUnit').value;
             const note = document.getElementById('medNote').value.trim();
+            const startDate = document.getElementById('startDate').value;
             
             if (!name) {
                 alert('请输入药品名称');
@@ -618,25 +743,41 @@
                 }
             }
 
-            medicines.push({
+            const medicineData = {
                 name,
                 qty,
                 unit,
-                time: selectedTimes.join(','), // 存储为逗号分隔的字符串
+                time: selectedTimes.join(','),
                 condition: selectedCondition,
                 frequency,
                 customFreqText,
+                startDate: startDate || new Date().toISOString().split('T')[0],
                 note,
                 taken: false,
                 takenTime: null,
                 createdAt: new Date().toISOString()
-            });
+            };
 
-            localStorage.setItem('medicines', JSON.stringify(medicines));
-            closeAddModal();
-            renderCurrentPeriodAlert();
-            renderMedicines();
-            alert('药品添加成功！');
+            if (editingIndex >= 0) {
+                // 更新现有药品
+                medicineData.taken = medicines[editingIndex].taken;
+                medicineData.takenTime = medicines[editingIndex].takenTime;
+                medicineData.createdAt = medicines[editingIndex].createdAt;
+                medicines[editingIndex] = medicineData;
+                localStorage.setItem('medicines', JSON.stringify(medicines));
+                closeAddModal();
+                renderCurrentPeriodAlert();
+                renderMedicines();
+                alert('药品更新成功！');
+            } else {
+                // 添加新药品
+                medicines.push(medicineData);
+                localStorage.setItem('medicines', JSON.stringify(medicines));
+                closeAddModal();
+                renderCurrentPeriodAlert();
+                renderMedicines();
+                alert('药品添加成功！');
+            }
         }
     </script>
 </body>
