@@ -381,7 +381,7 @@
                             <i class="fas ${icon} text-2xl mr-3"></i>
                             <div>
                                 <p class="font-bold">现在是${periodText}</p>
-                                <p class="text-sm opacity-80">${pendingMeds.length > 0 ? `还有 ${pendingMeds.length} 项待服用` : '已完成${periodText}服药'}</p>
+                                <p class="text-sm opacity-80">${pendingMeds.length > 0 ? `还有 ${pendingMeds.length} 项待服用` : '已完成'+periodText+'服药'}</p>
                             </div>
                         </div>
                         ${pendingMeds.length > 0 ? `<button onclick="markPeriodTaken('${period}')" class="px-4 py-2 bg-white text-primary-orange rounded-xl font-bold text-sm">
@@ -538,13 +538,28 @@
             renderMedicines();
         }
 
+        let pendingDeleteIndex = -1;
+        
         function deleteMedicine(index) {
-            if (confirm('确定删除这个药品？')) {
-                medicines.splice(index, 1);
+            pendingDeleteIndex = index;
+            const med = medicines[index];
+            document.getElementById('deleteConfirmText').textContent = '确定要删除 "' + med.name + '" 吗？';
+            document.getElementById('deleteConfirmModal').classList.remove('hidden');
+        }
+        
+        function closeDeleteConfirm() {
+            document.getElementById('deleteConfirmModal').classList.add('hidden');
+            pendingDeleteIndex = -1;
+        }
+        
+        function confirmDelete() {
+            if (pendingDeleteIndex >= 0) {
+                medicines.splice(pendingDeleteIndex, 1);
                 localStorage.setItem('medicines', JSON.stringify(medicines));
                 renderCurrentPeriodAlert();
                 renderMedicines();
             }
+            closeDeleteConfirm();
         }
 
         // 编辑药品
