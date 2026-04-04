@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>血压血糖 - AI健康助手</title>
+    <title>血压血�?- AI健康助手</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script>
@@ -31,7 +31,7 @@
     </style>
 </head>
 <body class="bg-bg-light min-h-screen pb-24">
-    <!-- 大字体提示弹窗 -->
+    <!-- 大字体提示弹�?-->
     <div id="bigAlert" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-6">
         <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl">
             <p id="bigAlertText" class="text-2xl font-bold text-gray-800 text-center leading-relaxed whitespace-pre-line"></p>
@@ -47,7 +47,7 @@
             <a href="index.html" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <h1 class="text-lg font-bold">血压血糖</h1>
+            <h1 class="text-lg font-bold">血压血�?/h1>
             <a href="analytics.html" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <i class="fas fa-chart-line"></i>
             </a>
@@ -57,18 +57,18 @@
     <!-- 切换按钮 -->
     <div class="bg-card-white px-3 py-2 shadow-sm flex">
         <button onclick="switchMode('bp')" id="bpTab" class="flex-1 py-3 text-base font-bold rounded-xl transition-all bg-primary-red text-white mr-1">
-            <i class="fas fa-heartbeat mr-1"></i>血压
+            <i class="fas fa-heartbeat mr-1"></i>血�?
         </button>
         <button onclick="switchMode('bs')" id="bsTab" class="flex-1 py-3 text-base font-bold rounded-xl transition-all bg-gray-100 text-gray-600 ml-1">
-            <i class="fas fa-tint mr-1"></i>血糖
+            <i class="fas fa-tint mr-1"></i>血�?
         </button>
     </div>
 
-    <!-- 血压区域 -->
+    <!-- 血压区�?-->
     <div id="bpSection" class="px-3 py-3">
-        <!-- 状态显示 -->
+        <!-- 状态显�?-->
         <div class="bg-gradient-to-b from-red-500 to-red-400 text-white rounded-2xl p-4 text-center mb-3">
-            <p class="text-base">当前状态</p>
+            <p class="text-base">当前状�?/p>
             <p class="text-3xl font-bold" id="bpStatus">正常</p>
             <p class="text-sm opacity-80" id="bpAdvice">继续保持</p>
         </div>
@@ -78,23 +78,23 @@
             <!-- 高压 -->
             <div class="mb-4">
                 <label class="block text-base font-bold text-gray-700 mb-2">
-                    <i class="fas fa-arrow-up text-primary-red mr-1"></i>高压 (收缩压)
+                    <i class="fas fa-arrow-up text-primary-red mr-1"></i>高压 (收缩�?
                 </label>
                 <input type="number" id="systolic" value="120" min="60" max="250" 
                        class="w-full px-4 py-5 text-3xl font-bold text-center border-2 border-primary-red/30 rounded-2xl focus:border-primary-red focus:outline-none bg-red-50/30"
-                       placeholder="输入高压值" oninput="updateBPFromInput()">
-                <p class="text-center text-sm text-gray-400 mt-1">正常范围：90-140 mmHg</p>
+                       placeholder="输入高压�? oninput="updateBPFromInput()">
+                <p class="text-center text-sm text-gray-400 mt-1">正常范围�?0-140 mmHg</p>
             </div>
 
             <!-- 低压 -->
             <div class="mb-4">
                 <label class="block text-base font-bold text-gray-700 mb-2">
-                    <i class="fas fa-arrow-down text-primary-blue mr-1"></i>低压 (舒张压)
+                    <i class="fas fa-arrow-down text-primary-blue mr-1"></i>低压 (舒张�?
                 </label>
                 <input type="number" id="diastolic" value="80" min="40" max="150" 
                        class="w-full px-4 py-5 text-3xl font-bold text-center border-2 border-primary-blue/30 rounded-2xl focus:border-primary-blue focus:outline-none bg-blue-50/30"
-                       placeholder="输入低压值" oninput="updateBPFromInput()">
-                <p class="text-center text-sm text-gray-400 mt-1">正常范围：60-90 mmHg</p>
+                       placeholder="输入低压�? oninput="updateBPFromInput()">
+                <p class="text-center text-sm text-gray-400 mt-1">正常范围�?0-90 mmHg</p>
             </div>
 
             <!-- 心率 -->
@@ -104,27 +104,27 @@
                 </label>
                 <input type="number" id="heartRate" value="72" min="40" max="200" 
                        class="w-full px-4 py-5 text-3xl font-bold text-center border-2 border-primary-orange/30 rounded-2xl focus:border-primary-orange focus:outline-none bg-orange-50/30"
-                       placeholder="输入心率值" oninput="updateBPFromInput()">
-                <p class="text-center text-sm text-gray-400 mt-1">正常范围：60-100 bpm</p>
+                       placeholder="输入心率�? oninput="updateBPFromInput()">
+                <p class="text-center text-sm text-gray-400 mt-1">正常范围�?0-100 bpm</p>
             </div>
 
             <button onclick="saveBP()" class="w-full py-5 bg-gradient-to-r from-red-500 to-red-400 text-white text-xl font-bold rounded-2xl active:scale-95 shadow-lg">
-                <i class="fas fa-check-circle mr-2"></i>记录血压
+                <i class="fas fa-check-circle mr-2"></i>记录血�?
             </button>
         </div>
 
         <!-- 历史记录 -->
         <h3 class="text-base font-bold text-gray-800 mt-4 mb-2">
-            <i class="fas fa-history mr-1"></i>最近记录
+            <i class="fas fa-history mr-1"></i>最近记�?
         </h3>
         <div id="bpHistory" class="space-y-2"></div>
     </div>
 
-    <!-- 血糖区域 -->
+    <!-- 血糖区�?-->
     <div id="bsSection" class="px-3 py-3 hidden">
-        <!-- 状态显示 -->
+        <!-- 状态显�?-->
         <div class="bg-gradient-to-b from-purple-500 to-purple-400 text-white rounded-2xl p-4 text-center mb-3">
-            <p class="text-base">当前状态</p>
+            <p class="text-base">当前状�?/p>
             <p class="text-3xl font-bold" id="bsStatus">正常</p>
             <p class="text-sm opacity-80" id="bsAdvice">控制良好</p>
         </div>
@@ -137,53 +137,53 @@
                 <button onclick="selectBSType('afterMeal')" id="afterMealBtn" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-bold">餐后</button>
             </div>
 
-            <!-- 血糖值 -->
+            <!-- 血糖�?-->
             <div class="mb-4">
                 <label class="block text-base font-bold text-gray-700 mb-2">
-                    <i class="fas fa-tint text-primary-purple mr-1"></i>血糖值
+                    <i class="fas fa-tint text-primary-purple mr-1"></i>血糖�?
                 </label>
                 <input type="number" id="bsValue" value="5.6" min="1" max="35" step="0.1"
                        class="w-full px-4 py-5 text-3xl font-bold text-center border-2 border-primary-purple/30 rounded-2xl focus:border-primary-purple focus:outline-none bg-purple-50/30"
-                       placeholder="输入血糖值" oninput="updateBSFromInput()">
-                <p class="text-center text-sm text-gray-400 mt-1">正常范围：空腹 3.9-6.1 / 餐后 &lt;7.8 mmol/L</p>
+                       placeholder="输入血糖�? oninput="updateBSFromInput()">
+                <p class="text-center text-sm text-gray-400 mt-1">正常范围：空�?3.9-6.1 / 餐后 &lt;7.8 mmol/L</p>
             </div>
 
             <button onclick="saveBS()" class="w-full py-4 bg-primary-purple text-white text-lg font-bold rounded-xl active:scale-95">
-                <i class="fas fa-save mr-2"></i>记录血糖
+                <i class="fas fa-save mr-2"></i>记录血�?
             </button>
         </div>
 
         <!-- 历史记录 -->
         <h3 class="text-base font-bold text-gray-800 mt-4 mb-2">
-            <i class="fas fa-history mr-1"></i>最近记录
+            <i class="fas fa-history mr-1"></i>最近记�?
         </h3>
         <div id="bsHistory" class="space-y-2"></div>
     </div>
 
-<!-- 参考标准 -->
+<!-- 参考标�?-->
     <div class="px-3 pb-4">
         <div class="bg-card-white card-radius p-3 shadow-sm" id="bpStd">
-            <h4 class="text-sm font-bold text-gray-800 mb-2">血压标准</h4>
+            <h4 class="text-sm font-bold text-gray-800 mb-2">血压标�?/h4>
             <div class="grid grid-cols-2 gap-2 text-xs">
                 <div class="bg-green-50 p-2 rounded"><span class="text-green-600">正常</span><br>收缩&lt;140 舒张&lt;90</div>
                 <div class="bg-orange-50 p-2 rounded"><span class="text-orange-600">偏高</span><br>140-160/90-100</div>
-                <div class="bg-red-50 p-2 rounded"><span class="text-red-600">高血压</span><br>&gt;160/&gt;100</div>
-                <div class="bg-blue-50 p-2 rounded"><span class="text-blue-600">低血压</span><br>&lt;90/&lt;60</div>
+                <div class="bg-red-50 p-2 rounded"><span class="text-red-600">高血�?/span><br>&gt;160/&gt;100</div>
+                <div class="bg-blue-50 p-2 rounded"><span class="text-blue-600">低血�?/span><br>&lt;90/&lt;60</div>
             </div>
         </div>
         <div class="bg-card-white card-radius p-3 shadow-sm hidden" id="bsStd">
-            <h4 class="text-sm font-bold text-gray-800 mb-2">血糖标准</h4>
+            <h4 class="text-sm font-bold text-gray-800 mb-2">血糖标�?/h4>
             <div class="grid grid-cols-2 gap-2 text-xs">
                 <div class="bg-green-50 p-2 rounded"><span class="text-green-600">正常</span><br>空腹3.9-6.1</div>
                 <div class="bg-purple-50 p-2 rounded"><span class="text-purple-600">正常</span><br>餐后&lt;7.8</div>
                 <div class="bg-orange-50 p-2 rounded"><span class="text-orange-600">偏高</span><br>空腹6.1-7.0</div>
-                <div class="bg-red-50 p-2 rounded"><span class="text-red-600">糖尿病</span><br>空腹≥7.0</div>
+                <div class="bg-red-50 p-2 rounded"><span class="text-red-600">糖尿�?/span><br>空腹�?.0</div>
             </div>
         </div>
     </div>
 
     <!-- 底部导航 -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-card-white border-t border-gray-200 px-2 py-2 z-40">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-40">
         <div class="flex justify-around items-center max-w-md mx-auto">
             <a href="index.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
                 <i class="fas fa-home text-xl"></i>
@@ -193,12 +193,10 @@
                 <i class="fas fa-pills text-xl"></i>
                 <span class="text-xs">药品</span>
             </a>
-            <a href="blood-pressure.html" class="flex flex-col items-center py-1 px-3 text-primary-red">
-                <i class="fas fa-heartbeat text-xl"></i>
+            <a href="blood-pressure.html" class="flex flex-col items-center py-1 px-3 text-primary-blue">\n                <i class="fas fa-heartbeat text-xl"></i>
                 <span class="text-xs font-medium">测量</span>
             </a>
-            <a href="analytics.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
-                <i class="fas fa-calendar text-xl"></i>
+            <a href="calendar.html" class="flex flex-col items-center py-1 px-3 text-gray-400">\n                <i class="fas fa-calendar text-xl"></i>
                 <span class="text-xs">日历</span>
             </a>
             <a href="profile.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
@@ -209,7 +207,7 @@
     </nav>
 
     <script>
-        // 数据记忆：从上次记录读取默认值
+        // 数据记忆：从上次记录读取默认�?
         function getLastBP() {
             const records = JSON.parse(localStorage.getItem('bpRecords')) || [];
             if (records.length > 0) {
@@ -238,7 +236,7 @@
         let bpRecords = JSON.parse(localStorage.getItem('bpRecords')) || [];
         let bsRecords = JSON.parse(localStorage.getItem('bsRecords')) || [];
 
-        // 大字体提示弹窗
+        // 大字体提示弹�?
         function showBigAlert(message) {
             document.getElementById('bigAlertText').textContent = message;
             document.getElementById('bigAlert').classList.remove('hidden');
@@ -314,7 +312,7 @@
 
         function getBPStatus() {
             if (systolic < 90 || diastolic < 60) return { status: '偏低', advice: '注意营养' };
-            if (systolic > 160 || diastolic > 100) return { status: '高血压', advice: '请就医' };
+            if (systolic > 160 || diastolic > 100) return { status: '高血�?, advice: '请就�? };
             if (systolic >= 140 || diastolic >= 90) return { status: '偏高', advice: '注意休息' };
             return { status: '正常', advice: '继续保持' };
         }
@@ -322,7 +320,7 @@
         function getBSStatus() {
             if (bsType === 'fasting') {
                 if (bsValue < 3.9) return { status: '偏低', advice: '补充糖分' };
-                if (bsValue >= 7.0) return { status: '偏高', advice: '请就医' };
+                if (bsValue >= 7.0) return { status: '偏高', advice: '请就�? };
                 if (bsValue >= 6.1) return { status: '偏高', advice: '注意饮食' };
                 return { status: '正常', advice: '控制良好' };
             } else {
@@ -353,7 +351,7 @@
             localStorage.setItem('bpRecords', JSON.stringify(bpRecords));
             renderBPHistory();
             // 显示详细弹窗
-            const msg = `血压已记录！\n\n您的血压：${systolic}/${diastolic} mmHg\n心率：${heartRate} bpm\n当前状态：${r.status}\n\n${r.advice}`;
+            const msg = `血压已记录！\n\n您的血压：${systolic}/${diastolic} mmHg\n心率�?{heartRate} bpm\n当前状态：${r.status}\n\n${r.advice}`;
             showBigAlert(msg);
         }
 
@@ -378,7 +376,7 @@
                 return;
             }
             container.innerHTML = bpRecords.slice(0, 10).map(r => {
-                const color = r.status === '正常' ? 'green' : r.status === '偏高' ? 'orange' : r.status === '高血压' ? 'red' : 'blue';
+                const color = r.status === '正常' ? 'green' : r.status === '偏高' ? 'orange' : r.status === '高血�? ? 'red' : 'blue';
                 return `
                     <div class="bg-card-white card-radius p-3">
                         <div class="flex items-center justify-between mb-2">
@@ -391,13 +389,13 @@
                         <div class="flex items-center justify-between pl-2">
                             <div class="flex items-center space-x-4">
                                 <div class="text-center">
-                                    <span class="text-xs text-gray-400">收缩压</span>
+                                    <span class="text-xs text-gray-400">收缩�?/span>
                                     <p class="text-xl font-bold text-primary-red">${r.systolic}</p>
                                     <span class="text-xs text-gray-400">mmHg</span>
                                 </div>
                                 <div class="text-gray-300 text-xl">/</div>
                                 <div class="text-center">
-                                    <span class="text-xs text-gray-400">舒张压</span>
+                                    <span class="text-xs text-gray-400">舒张�?/span>
                                     <p class="text-xl font-bold text-primary-blue">${r.diastolic}</p>
                                     <span class="text-xs text-gray-400">mmHg</span>
                                 </div>
@@ -449,13 +447,13 @@
         renderBPHistory();
         renderBSHistory();
 
-        // 检查URL参数切换到血糖模式
+        // 检查URL参数切换到血糖模�?
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('mode') === 'bs') {
             switchMode('bs');
         }
 
-        // 数据记忆：从上次记录填充默认值
+        // 数据记忆：从上次记录填充默认�?
         document.addEventListener('DOMContentLoaded', () => {
             const lastBP = getLastBP();
             const lastBS = getLastBS();
@@ -481,3 +479,6 @@
     </script>
 </body>
 </html>
+
+
+

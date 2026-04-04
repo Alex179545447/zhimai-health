@@ -60,7 +60,7 @@
     </div>
 
     <!-- 常用药品快捷选择 -->
-    <div id="commonMedsSection" class="bg-card-white mx-3 mt-3 p-3 shadow-sm rounded-xl">
+    <div id="commonMedsSection" class="hidden">
         <div class="flex items-center justify-between mb-2">
             <p class="text-sm font-bold text-gray-600">
                 <i class="fas fa-star text-yellow-500 mr-1"></i>常用药品
@@ -434,7 +434,7 @@
                 const timeText = times.map(t => ({ morning: '早', noon: '午', evening: '晚' }[t] || '')).join('·');
                 const timeIcon = { morning: 'fa-sun text-yellow-500', noon: 'fa-cloud-sun text-orange-400', evening: 'fa-moon text-blue-400' }[times[0]] || 'fa-sun';
                 const condText = { before: '饭前', after: '饭后', '不限': '不限' }[m.condition] || '饭后';
-                const freqMap = { once: '一次', daily: '每天', every2days: '隔天', weekly: '每周', every2weeks: '每2周', every3weeks: '每3周', every4weeks: '每4周', custom: m.customFreqText || '自定义' };
+                const freqMap = { once: '一次', daily: '每天', every2days: '隔天', weekly: '每周', every2weeks: '隔周', every3weeks: '每3周', every4weeks: '每4周', custom: m.customFreqText || '自定义' };
                 const freqText = freqMap[m.frequency] || '每天';
                 
                 const canTake = m.frequency !== 'once';
@@ -538,28 +538,25 @@
             renderMedicines();
         }
 
-        let pendingDeleteIndex = -1;
-        
         function deleteMedicine(index) {
-            pendingDeleteIndex = index;
             const med = medicines[index];
-            document.getElementById('deleteConfirmText').textContent = '确定要删除 "' + med.name + '" 吗？';
-            document.getElementById('deleteConfirmModal').classList.remove('hidden');
-        }
-        
-        function closeDeleteConfirm() {
-            document.getElementById('deleteConfirmModal').classList.add('hidden');
-            pendingDeleteIndex = -1;
-        }
-        
-        function confirmDelete() {
-            if (pendingDeleteIndex >= 0) {
-                medicines.splice(pendingDeleteIndex, 1);
+            const modal = document.getElementById('bigAlert');
+            const textEl = document.getElementById('bigAlertText');
+            const btn = modal.querySelector('button');
+            
+            textEl.textContent = '确定要删除「' + med.name + '」吗？\n\n删除后无法恢复！';
+            modal.classList.remove('hidden');
+            modal.dataset.deleteIndex = index;
+            
+            btn.onclick = function() {
+                const idx = parseInt(modal.dataset.deleteIndex);
+                medicines.splice(idx, 1);
                 localStorage.setItem('medicines', JSON.stringify(medicines));
                 renderCurrentPeriodAlert();
                 renderMedicines();
-            }
-            closeDeleteConfirm();
+                closeBigAlert();
+                btn.onclick = closeBigAlert;
+            };
         }
 
         // 编辑药品
