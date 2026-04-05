@@ -261,50 +261,32 @@
             document.getElementById('wechatModal').classList.add('hidden');
         }
 
-        // 确认微信登录（使用真实API）
+        // 确认微信登录
         async function confirmWechatLogin() {
             closeWechatModal();
-            
-            // 显示加载中
             document.getElementById('loadingText').textContent = '正在连接服务器...';
             document.getElementById('loadingModal').classList.remove('hidden');
             
+            // 使用匿名userId登录，数据自动关联
+            const userId = 'wx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            localStorage.setItem('health_user_id', userId);
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userInfo', JSON.stringify({
+                userId: userId,
+                username: '微信用户',
+                loginType: 'wechat',
+                loginTime: new Date().toISOString()
+            }));
+            
+            // 尝试同步云端数据
             try {
-                // 尝试注册/登录
-                const result = await HealthAPI.Auth.login('wechat_' + Date.now(), '');
-                
-                if (result.success) {
-                    // 尝试同步数据
-                    await HealthAPI.Data.syncAll();
-                    
-                    alert('登录成功！您的数据已同步到云端');
-                } else {
-                    // API不可用，使用本地模式
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('userInfo', JSON.stringify({
-                        userId: HealthAPI.getUserId(),
-                        username: '微信用户',
-                        loginType: 'wechat',
-                        loginTime: new Date().toISOString()
-                    }));
-                    
-                    alert('登录成功！（本地模式）');
-                }
+                await HealthAPI.Data.syncAll();
             } catch (e) {
-                console.error('登录失败:', e);
-                // 即使API失败，也允许本地使用
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userInfo', JSON.stringify({
-                    userId: HealthAPI.getUserId(),
-                    username: '微信用户',
-                    loginType: 'wechat',
-                    loginTime: new Date().toISOString()
-                }));
-                
-                alert('登录成功！（离线模式）');
+                console.log('云端同步暂不可用');
             }
             
             document.getElementById('loadingModal').classList.add('hidden');
+            alert('登录成功！您的健康数据将同步到云端');
             window.location.href = 'index.html';
         }
 
@@ -313,29 +295,26 @@
             document.getElementById('loadingText').textContent = '正在初始化...';
             document.getElementById('loadingModal').classList.remove('hidden');
             
+            // 使用匿名userId
+            const userId = 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            localStorage.setItem('health_user_id', userId);
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userInfo', JSON.stringify({
+                userId: userId,
+                username: '游客',
+                loginType: 'guest',
+                loginTime: new Date().toISOString()
+            }));
+            
+            // 尝试同步云端数据
             try {
-                // 尝试注册/登录
-                await HealthAPI.Auth.login('guest', '');
-                
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userInfo', JSON.stringify({
-                    userId: HealthAPI.getUserId(),
-                    username: '游客',
-                    loginType: 'guest',
-                    loginTime: new Date().toISOString()
-                }));
+                await HealthAPI.Data.syncAll();
             } catch (e) {
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('userInfo', JSON.stringify({
-                    userId: HealthAPI.getUserId(),
-                    username: '游客',
-                    loginType: 'guest',
-                    loginTime: new Date().toISOString()
-                }));
+                console.log('云端同步暂不可用');
             }
             
             document.getElementById('loadingModal').classList.add('hidden');
-            alert('欢迎使用！您可以随时在"我的"页面完善个人信息');
+            alert('欢迎使用！您的健康数据将同步到云端');
             window.location.href = 'index.html';
         }
 

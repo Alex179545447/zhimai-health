@@ -1,7 +1,10 @@
 /**
  * 智脉AI健康助手 - API服务
  * 对接后端服务器: http://47.110.151.230:3000
- * 实现用户注册/登录和数据云端同步
+ * API接口:
+ * - POST /api/get - 获取数据 {userId, type} -> []
+ * - POST /api/save - 保存数据 {userId, type, data} -> {id}
+ * - GET  /health - 健康检查
  */
 
 // API基础地址
@@ -18,13 +21,12 @@ function getUserId() {
 }
 
 // API请求封装
-async function apiRequest(endpoint, method = 'GET', data = null) {
+async function apiRequest(endpoint, method = 'POST', data = null) {
     const url = `${API_BASE_URL}${endpoint}`;
     const options = {
         method,
         headers: {
-            'Content-Type': 'application/json',
-            'X-User-ID': getUserId()
+            'Content-Type': 'application/json'
         }
     };
 
@@ -35,115 +37,23 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
     try {
         const response = await fetch(url, options);
         const result = await response.json();
-
-        // 如果服务器返回了新的userId，保存它
-        if (result.userId) {
-            localStorage.setItem('health_user_id', result.userId);
-        }
-
-        return { ...result, _fromCloud: true };
+        return { success: true, ...result, _fromCloud: true };
     } catch (error) {
         console.error('API请求失败:', error);
-        // API失败时回退到localStorage
         return { success: false, error: error.message, _fromCloud: false, _fallback: true };
     }
 }
 
-// ============ 用户认证API ============
-
-const AuthAPI = {
-    // 注册
-    async register(username, password) {
-        const userId = getUserId();
-        const result = await apiRequest('/register', 'POST', {
-            userId,
-            username: username || 'user_' + Date.now(),
-            password: password || '',
-            createdAt: new Date().toISOString()
-        });
-
-        if (result.success) {
-            // 保存登录状态
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userInfo', JSON.stringify({
-                userId: result.userId || userId,
-                username: username,
-                loginTime: new Date().toISOString()
-            }));
-        }
-
-        return result;
-    },
-
-    // 登录
-    async login(username, password) {
-        const userId = getUserId();
-        const result = await apiRequest('/login', 'POST', {
-            userId,
-            username: username || 'guest',
-            password: password || ''
-        });
-
-        if (result.success) {
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('userInfo', JSON.stringify({
-                userId: result.userId || userId,
-                username: username,
-                loginTime: new Date().toISOString()
-            }));
-        }
-
-        return result;
-    },
-
-    // 检查登录状态
-    isLoggedIn() {
-        return localStorage.getItem('isLoggedIn') === 'true';
-    },
-
-    // 退出登录
-    logout() {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('userInfo');
-        // 保留userId，下次登录可以关联数据
-    }
-};
-
 // ============ 数据存储API ============
 
 const DataAPI = {
-    // 保存用户数据（药品、血压、档案等）
-    async saveData(type, data) {
-        const userId = getUserId();
-        const result = await apiRequest('/save', 'POST', {
-            userId,
-            type,  // 'medicines', 'bpRecords', 'bsRecords', 'profile', 'healthRecord', 'reminders'
-            data,
-            updatedAt: new Date().toISOString()
-        });
-
-        if (result._fallback) {
-            // 回退到localStorage
-            localStorage.setItem(type, JSON.stringify(data));
-            return { success: true, _fallback: true };
-        }
-
-        // 同时保存到本地作为备份
-        localStorage.setItem(type, JSON.stringify(data));
-
-        return result;
-    },
-
     // 获取用户数据
-    async getData(type) {
+    async get(type) {
         const userId = getUserId();
-        const result = await apiRequest('/get', 'POST', {
-            userId,
-            type
-        });
+        const result = await apiRequest('/get', 'POST', { userId, type });
 
         if (result.success && result.data) {
-            // 优先使用云端数据，同时更新本地
+            // 保存到本地作为缓存
             localStorage.setItem(type, JSON.stringify(result.data));
             return { ...result, _fromCloud: true };
         }
@@ -158,51 +68,50 @@ const DataAPI = {
         };
     },
 
-    // 批量同步所有数据
-    async syncAll() {
+    // 保存用户数据
+    async save(type, data) {
         const userId = getUserId();
-        const dataTypes = ['medicines', 'bpRecords', 'bsRecords', 'profile', 'healthRecord', 'commonMedicines', 'reminders'];
-        const cloudData = {};
+        const result = await apiRequest('/save', 'POST', { userId, type, data });
 
-        // 获取所有云端数据
-        for (const type of dataTypes) {
-            const result = await DataAPI.getData(type);
-            if (result._fromCloud && result.data) {
-                cloudData[type] = result.data;
-            }
+        // 同时保存到本地
+        localStorage.setItem(type, JSON.stringify(data));
+
+        if (result._fallback) {
+            return { success: true, _fallback: true, id: Date.now() };
         }
 
-        // 合并数据（云端优先，或取较新的）
-        for (const type of dataTypes) {
-            if (cloudData[type]) {
-                localStorage.setItem(type, JSON.stringify(cloudData[type]));
-            }
-        }
-
-        return { success: true, data: cloudData };
+        return { ...result, _fromCloud: true };
     },
 
-    // 上传所有本地数据到云端
-    async uploadAll() {
-        const userId = getUserId();
-        const dataTypes = ['medicines', 'bpRecords', 'bsRecords', 'profile', 'healthRecord', 'commonMedicines', 'reminders'];
-        const allData = {};
+    // 同步所有数据（从云端拉取）
+    async syncAll() {
+        const types = ['medicines', 'bpRecords', 'bsRecords', 'profile', 'healthRecord', 'commonMedicines'];
+        const results = {};
 
-        for (const type of dataTypes) {
-            const localData = localStorage.getItem(type);
-            if (localData) {
-                allData[type] = JSON.parse(localData);
+        for (const type of types) {
+            const result = await DataAPI.get(type);
+            if (result._fromCloud && result.data) {
+                results[type] = result.data;
             }
         }
 
-        const result = await apiRequest('/save', 'POST', {
-            userId,
-            type: 'all',
-            data: allData,
-            updatedAt: new Date().toISOString()
-        });
+        return { success: true, data: results, _fromCloud: true };
+    },
 
-        return result;
+    // 上传所有数据到云端
+    async uploadAll() {
+        const types = ['medicines', 'bpRecords', 'bsRecords', 'profile', 'healthRecord', 'commonMedicines'];
+        const results = {};
+
+        for (const type of types) {
+            const localData = localStorage.getItem(type);
+            if (localData) {
+                const result = await DataAPI.save(type, JSON.parse(localData));
+                results[type] = result;
+            }
+        }
+
+        return { success: true, data: results };
     }
 };
 
@@ -210,7 +119,7 @@ const DataAPI = {
 
 const MedicineAPI = {
     async getAll() {
-        const result = await DataAPI.getData('medicines');
+        const result = await DataAPI.get('medicines');
         return {
             success: true,
             data: result.data || [],
@@ -219,39 +128,39 @@ const MedicineAPI = {
     },
 
     async add(medicine) {
-        const result = await DataAPI.getData('medicines');
+        const result = await DataAPI.get('medicines');
         const medicines = result.data || [];
         medicine.id = Date.now();
         medicine.createdAt = new Date().toISOString();
         medicines.push(medicine);
 
-        const saveResult = await DataAPI.saveData('medicines', medicines);
+        const saveResult = await DataAPI.save('medicines', medicines);
         return { success: saveResult.success, data: medicine, local: saveResult._fallback };
     },
 
     async update(id, medicine) {
-        const result = await DataAPI.getData('medicines');
+        const result = await DataAPI.get('medicines');
         const medicines = result.data || [];
         const index = medicines.findIndex(m => m.id == id);
         if (index >= 0) {
             medicines[index] = { ...medicines[index], ...medicine };
         }
 
-        const saveResult = await DataAPI.saveData('medicines', medicines);
+        const saveResult = await DataAPI.save('medicines', medicines);
         return { success: saveResult.success, data: medicines[index], local: saveResult._fallback };
     },
 
     async delete(id) {
-        const result = await DataAPI.getData('medicines');
+        const result = await DataAPI.get('medicines');
         let medicines = result.data || [];
         medicines = medicines.filter(m => m.id != id);
 
-        const saveResult = await DataAPI.saveData('medicines', medicines);
+        const saveResult = await DataAPI.save('medicines', medicines);
         return { success: saveResult.success, local: saveResult._fallback };
     },
 
     async markTaken(id, taken) {
-        const result = await DataAPI.getData('medicines');
+        const result = await DataAPI.get('medicines');
         const medicines = result.data || [];
         const medicine = medicines.find(m => m.id == id);
         if (medicine) {
@@ -259,19 +168,19 @@ const MedicineAPI = {
             medicine.takenTime = taken ? new Date().toISOString() : null;
         }
 
-        const saveResult = await DataAPI.saveData('medicines', medicines);
+        const saveResult = await DataAPI.save('medicines', medicines);
         return { success: saveResult.success, local: saveResult._fallback };
     },
 
     async resetToday() {
-        const result = await DataAPI.getData('medicines');
+        const result = await DataAPI.get('medicines');
         const medicines = result.data || [];
         medicines.forEach(m => {
             m.taken = false;
             m.takenTime = null;
         });
 
-        const saveResult = await DataAPI.saveData('medicines', medicines);
+        const saveResult = await DataAPI.save('medicines', medicines);
         return { success: saveResult.success, local: saveResult._fallback };
     }
 };
@@ -281,7 +190,7 @@ const MedicineAPI = {
 const BPAPI = {
     async getRecords(type = 'bp') {
         const key = type === 'bs' ? 'bsRecords' : 'bpRecords';
-        const result = await DataAPI.getData(key);
+        const result = await DataAPI.get(key);
         return {
             success: true,
             data: result.data || [],
@@ -291,23 +200,23 @@ const BPAPI = {
 
     async add(record) {
         const key = record.type === 'bs' ? 'bsRecords' : 'bpRecords';
-        const result = await DataAPI.getData(key);
+        const result = await DataAPI.get(key);
         const records = result.data || [];
         record.id = Date.now();
         record.createdAt = new Date().toISOString();
         records.unshift(record);
 
-        const saveResult = await DataAPI.saveData(key, records);
+        const saveResult = await DataAPI.save(key, records);
         return { success: saveResult.success, data: record, local: saveResult._fallback };
     },
 
     async delete(id, type) {
         const key = type === 'bs' ? 'bsRecords' : 'bpRecords';
-        const result = await DataAPI.getData(key);
+        const result = await DataAPI.get(key);
         let records = result.data || [];
         records = records.filter(r => r.id != id);
 
-        const saveResult = await DataAPI.saveData(key, records);
+        const saveResult = await DataAPI.save(key, records);
         return { success: saveResult.success, local: saveResult._fallback };
     }
 };
@@ -316,7 +225,7 @@ const BPAPI = {
 
 const ProfileAPI = {
     async get() {
-        const result = await DataAPI.getData('profile');
+        const result = await DataAPI.get('profile');
         return {
             success: true,
             data: result.data || {},
@@ -325,11 +234,11 @@ const ProfileAPI = {
     },
 
     async update(profileData) {
-        const result = await DataAPI.getData('profile');
+        const result = await DataAPI.get('profile');
         const profile = { ...(result.data || {}), ...profileData };
         profile.updatedAt = new Date().toISOString();
 
-        const saveResult = await DataAPI.saveData('profile', profile);
+        const saveResult = await DataAPI.save('profile', profile);
         return { success: saveResult.success, data: profile, local: saveResult._fallback };
     }
 };
@@ -340,7 +249,7 @@ async function checkAPIHealth() {
     try {
         const response = await fetch('http://47.110.151.230:3000/health');
         const result = await response.json();
-        return result.success !== false;
+        return result.success !== false || result.status === 'ok';
     } catch {
         return false;
     }
@@ -349,7 +258,6 @@ async function checkAPIHealth() {
 // ============ 导出 ============
 
 window.HealthAPI = {
-    Auth: AuthAPI,
     Data: DataAPI,
     Medicine: MedicineAPI,
     BP: BPAPI,
