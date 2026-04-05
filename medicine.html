@@ -60,12 +60,14 @@
     </div>
 
     <!-- 常用药品快捷选择 -->
-    <div id="commonMedsSection" class="hidden">
+    <div id="commonMedsSection" class="mx-3 mt-3">
         <div class="flex items-center justify-between mb-2">
             <p class="text-sm font-bold text-gray-600">
                 <i class="fas fa-star text-yellow-500 mr-1"></i>常用药品
             </p>
-
+            <button onclick="clearCommonMedicines()" class="text-xs text-gray-400 hover:text-gray-600">
+                <i class="fas fa-trash-alt mr-1"></i>清空
+            </button>
         </div>
         <div id="commonMedsQuick" class="flex space-x-2 overflow-x-auto pb-1">
             <!-- 动态生成 -->
@@ -318,6 +320,7 @@
         let selectedMonthday = 1; // 默认每月1号
         let currentFilter = 'all';
         let medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+        let commonMedicines = JSON.parse(localStorage.getItem('commonMedicines')) || [];
 
         // 大字体提示弹窗
         function showBigAlert(message) {
@@ -340,6 +343,7 @@
             
             renderCurrentPeriodAlert();
             renderMedicines();
+            renderCommonMedicines();
             checkAllergyAlert();
         });
 
@@ -845,8 +849,8 @@
                 customContainer.classList.add('hidden');
             }
             
-            // 每周及以上频次显示开始日期选择
-            const needsStartDate = ['weekly', 'every2weeks', 'every3weeks', 'every4weeks', 'custom'].includes(select.value);
+            // 每天、隔天及以上频次显示开始日期选择
+            const needsStartDate = ['daily', 'every2days', 'weekly', 'every2weeks', 'every3weeks', 'every4weeks', 'custom'].includes(select.value);
             const weekdayContainer = document.getElementById('weekdayContainer');
             const monthdayContainer = document.getElementById('monthdayContainer');
             
@@ -857,7 +861,7 @@
                     const today = new Date().toISOString().split('T')[0];
                     document.getElementById('startDate').value = today;
                 }
-                // 每周频次显示周几选择
+                // 每周及以上频次显示周几选择
                 weekdayContainer.classList.remove('hidden');
             } else {
                 startDateContainer.classList.add('hidden');
@@ -980,10 +984,74 @@
                 // 添加新药品
                 medicines.push(medicineData);
                 localStorage.setItem('medicines', JSON.stringify(medicines));
+                
+                // 自动添加到常用药品列表
+                addToCommonMedicines(name, unit);
+                
                 closeAddModal();
                 renderCurrentPeriodAlert();
                 renderMedicines();
+                renderCommonMedicines();
                 alert('药品添加成功！');
+            }
+        }
+        
+        // 添加到常用药品
+        function addToCommonMedicines(name, unit) {
+            // 检查是否已存在
+            const exists = commonMedicines.some(m => m.name === name);
+            if (!exists) {
+                commonMedicines.unshift({
+                    name: name,
+                    unit: unit,
+                    addedAt: new Date().toISOString()
+                });
+                // 限制常用药品数量，最多保存20个
+                if (commonMedicines.length > 20) {
+                    commonMedicines = commonMedicines.slice(0, 20);
+                }
+                localStorage.setItem('commonMedicines', JSON.stringify(commonMedicines));
+            }
+        }
+        
+        // 渲染常用药品
+        function renderCommonMedicines() {
+            const container = document.getElementById('commonMedsQuick');
+            const section = document.getElementById('commonMedsSection');
+            
+            if (commonMedicines.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            
+            section.classList.remove('hidden');
+            container.innerHTML = commonMedicines.map((m, i) => `
+                <button onclick="quickAddMedicine('${m.name}', '${m.unit}')" 
+                        class="flex-shrink-0 px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl text-primary-blue font-bold text-sm shadow-sm hover:shadow-md active:scale-95 transition-all whitespace-nowrap">
+                    <i class="fas fa-bolt mr-1 text-yellow-500"></i>${m.name}
+                </button>
+            `).join('');
+        }
+        
+        // 快速添加常用药品
+        function quickAddMedicine(name, unit) {
+            // 填充表单
+            document.getElementById('medName').value = name;
+            document.getElementById('medUnit').value = unit || '片';
+            showAddModal();
+        }
+        
+        // 清空常用药品
+        function clearCommonMedicines() {
+            if (commonMedicines.length === 0) {
+                alert('常用药品列表已经是空的');
+                return;
+            }
+            if (confirm('确定要清空常用药品列表吗？')) {
+                commonMedicines = [];
+                localStorage.setItem('commonMedicines', JSON.stringify(commonMedicines));
+                renderCommonMedicines();
+                alert('常用药品已清空');
             }
         }
     </script>
