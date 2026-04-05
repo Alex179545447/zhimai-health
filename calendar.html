@@ -24,6 +24,7 @@
             }
         }
     </script>
+
     <style>
         * { -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -42,48 +43,59 @@
             <a href="index.html" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <i class="fas fa-arrow-left"></i>
             </a>
+
             <h1 class="text-lg font-bold">健康日历</h1>
             <div class="flex space-x-2">
                 <button onclick="refreshCalendar()" class="px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
                     <i class="fas fa-sync-alt mr-1"></i>刷新
                 </button>
+
                 <button onclick="goToToday()" class="px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
                     今天
                 </button>
             </div>
+
         </div>
+
     </header>
+
 
     <!-- 月份切换 -->
     <div class="bg-card-white px-4 py-3 shadow-sm flex items-center justify-between">
         <button onclick="changeMonth(-1)" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
             <i class="fas fa-chevron-left text-gray-600"></i>
         </button>
-        <h2 id="currentMonth" class="text-xl font-bold text-gray-800">2024�?�?/h2>
+
+        <h2 id="currentMonth" class="text-xl font-bold text-gray-800">2024年1月</h2>
         <button onclick="changeMonth(1)" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
             <i class="fas fa-chevron-right text-gray-600"></i>
         </button>
+
     </div>
+
 
     <!-- 星期标题 -->
     <div class="bg-card-white px-2 py-2 shadow-sm">
         <div class="grid grid-cols-7 text-center">
-            <div class="text-red-500 text-sm font-bold py-2">�?/div>
+            <div class="text-red-500 text-sm font-bold py-2">日</div>
             <div class="text-gray-600 text-sm font-bold py-2">一</div>
-            <div class="text-gray-600 text-sm font-bold py-2">�?/div>
-            <div class="text-gray-600 text-sm font-bold py-2">�?/div>
-            <div class="text-gray-600 text-sm font-bold py-2">�?/div>
-            <div class="text-gray-600 text-sm font-bold py-2">�?/div>
-            <div class="text-gray-400 text-sm font-bold py-2">�?/div>
+            <div class="text-gray-600 text-sm font-bold py-2">二</div>
+            <div class="text-gray-600 text-sm font-bold py-2">三</div>
+            <div class="text-gray-600 text-sm font-bold py-2">四</div>
+            <div class="text-gray-600 text-sm font-bold py-2">五</div>
+            <div class="text-gray-400 text-sm font-bold py-2">六</div>
         </div>
+
     </div>
+
 
     <!-- 日历主体 -->
     <div class="bg-card-white px-2 py-2 shadow-sm mb-3">
         <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center">
-            <!-- 动态生�?-->
+            <!-- 动态生成 -->
         </div>
     </div>
+
 
     <!-- 图例 -->
     <div class="px-4 py-2 mb-2">
@@ -92,33 +104,43 @@
                 <span class="event-dot bg-primary-blue mr-1"></span>
                 <span class="text-sm text-gray-600">药品</span>
             </div>
+
             <div class="flex items-center">
                 <span class="event-dot bg-primary-orange mr-1"></span>
                 <span class="text-sm text-gray-600">挂号</span>
             </div>
+
             <div class="flex items-center">
                 <span class="event-dot bg-primary-green mr-1"></span>
                 <span class="text-sm text-gray-600">就医</span>
             </div>
+
             <div class="flex items-center">
                 <span class="event-dot bg-primary-red mr-1"></span>
-                <span class="text-sm text-gray-600">血�?/span>
+                <span class="text-sm text-gray-600">血压</span>
             </div>
+
         </div>
+
     </div>
+
 
     <!-- 选中日期详情 -->
     <div class="px-3">
         <div class="bg-card-white card-radius p-4 shadow-sm">
             <div class="flex items-center justify-between mb-3">
-                <h3 id="selectedDateTitle" class="text-lg font-bold text-gray-800">1�?5�?周一</h3>
-                <span id="eventCount" class="px-3 py-1 bg-primary-blue text-white rounded-full text-sm">0项日�?/span>
+                <h3 id="selectedDateTitle" class="text-lg font-bold text-gray-800">1月15日 周一</h3>
+
+                <span id="eventCount" class="px-3 py-1 bg-primary-blue text-white rounded-full text-sm">0项日程</span>
             </div>
+
             <div id="dayEvents" class="space-y-2">
-                <!-- 动态生�?-->
+                <!-- 动态生成 -->
             </div>
+
         </div>
     </div>
+
 
     <!-- 底部导航 -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 z-40">
@@ -127,31 +149,38 @@
                 <i class="fas fa-home text-xl"></i>
                 <span class="text-xs">首页</span>
             </a>
+
             <a href="medicine.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
                 <i class="fas fa-pills text-xl"></i>
                 <span class="text-xs">药品</span>
             </a>
+
             <a href="blood-pressure.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
                 <i class="fas fa-heartbeat text-xl"></i>
                 <span class="text-xs">测量</span>
             </a>
+
             <a href="calendar.html" class="flex flex-col items-center py-1 px-3 text-primary-blue">
                 <i class="fas fa-calendar text-xl"></i>
-                <span class="text-xs font-medium">����</span>
+                <span class="text-xs font-medium">日历</span>
             </a>
+
             <a href="profile.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
                 <i class="fas fa-user text-xl"></i>
-                <span class="text-xs">�ҵ�</span>
+                <span class="text-xs">我的</span>
             </a>
+
         </div>
+
     </nav>
+
 
 
     <script>
         let currentYear, currentMonth;
         let selectedDate = null;
         
-        // 初始�?
+        // 初始化
         function init() {
             const now = new Date();
             currentYear = now.getFullYear();
@@ -182,7 +211,7 @@
             renderDayEvents();
         }
 
-        // 跳转到今�?
+        // 跳转到今天
         function goToToday() {
             const now = new Date();
             currentYear = now.getFullYear();
@@ -194,15 +223,16 @@
 
         // 渲染日历
         function renderCalendar() {
-            const monthNames = ['1�?, '2�?, '3�?, '4�?, '5�?, '6�?, '7�?, '8�?, '9�?, '10�?, '11�?, '12�?];
-            document.getElementById('currentMonth').textContent = `${currentYear}�?{monthNames[currentMonth]}`;
+            const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            document.getElementById('currentMonth').textContent = `${currentYear}年${monthNames[currentMonth]}`;
 
             const firstDay = new Date(currentYear, currentMonth, 1);
+
             const lastDay = new Date(currentYear, currentMonth + 1, 0);
             const startDay = firstDay.getDay();
             const totalDays = lastDay.getDate();
 
-            // 获取所有事�?
+            // 获取所有事件
             const events = getAllEvents();
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -214,6 +244,7 @@
                 html += '<div class="calendar-day p-1"></div>';
             }
 
+
             // 填充日期
             for (let day = 1; day <= totalDays; day++) {
                 const date = new Date(currentYear, currentMonth, day);
@@ -222,13 +253,15 @@
                 const isToday = date.getTime() === today.getTime();
                 const isSelected = selectedDate && date.getTime() === selectedDate.getTime();
 
+
                 let classes = 'calendar-day p-1 cursor-pointer relative';
                 if (isToday) classes += ' today';
                 if (isSelected) classes += ' selected';
 
-                // 生成事件�?
+                // 生成事件点
                 let dotsHtml = '';
                 if (dayEvents.length > 0) {
+
                     const uniqueTypes = [...new Set(dayEvents.map(e => e.type))];
                     dotsHtml = '<div class="flex justify-center gap-1 mt-1">';
                     uniqueTypes.slice(0, 4).forEach(type => {
@@ -243,6 +276,7 @@
                     dotsHtml += '</div>';
                 }
 
+
                 html += `
                     <div class="${classes}" onclick="selectDate(${currentYear}, ${currentMonth}, ${day})">
                         <div class="text-lg font-bold ${dayEvents.length > 0 ? '' : 'text-gray-700'}">${day}</div>
@@ -251,8 +285,10 @@
                 `;
             }
 
+
             document.getElementById('calendarGrid').innerHTML = html;
         }
+
 
         // 选择日期
         function selectDate(year, month, day) {
@@ -261,7 +297,7 @@
             renderDayEvents();
         }
 
-        // 获取所有事�?
+        // 获取所有事件
         function getAllEvents() {
             const events = {};
             const now = new Date();
@@ -270,17 +306,18 @@
             // 获取药品事件
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
             medicines.forEach(med => {
-                if (!med.startDate) med.startDate = med.createdAt ? med.createdAt.split('T')[0] : formatDateStr(today);
+
+                if (!med.startDate) med.startDate = med.createdAt? med.createdAt.split('T')[0] : formatDateStr(today);
                 
                 const startDate = new Date(med.startDate);
-                const endDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()); // 未来一�?
+                const endDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()); // 未来一年
                 
-                // 计算所有服药日�?
+                // 计算所有服药日期
                 let current = new Date(startDate);
                 while (current <= endDate) {
                     if (current >= today) {
                         if (shouldTakeOnDate(med, current)) {
-const dateStr = formatDateStr(current);
+                            const dateStr = formatDateStr(current);
                             if (!events[dateStr]) events[dateStr] = [];
                             events[dateStr].push({
                                 type: 'medicine',
@@ -288,13 +325,14 @@ const dateStr = formatDateStr(current);
                                 time: med.time || 'morning',
                                 icon: 'fa-pills',
                                 color: 'primary-blue',
-                                detail: `服用 ${med.qty || 1}${med.unit || '�?}`
+                                detail: `服用 ${med.qty || 1}${med.unit || '片'}`
                             });
                         }
                     }
                     
                     // 根据频次推进日期
                     current = getNextDate(med, current);
+
                     if (!current) break;
                 }
             });
@@ -302,6 +340,7 @@ const dateStr = formatDateStr(current);
             // 获取挂号提醒
             const registers = JSON.parse(localStorage.getItem('registers')) || [];
             registers.forEach(reg => {
+
                 if (reg.time) {
                     const date = new Date(reg.time);
                     const dateStr = formatDateStr(date);
@@ -320,6 +359,7 @@ const dateStr = formatDateStr(current);
             // 获取就医提醒
             const hospitals = JSON.parse(localStorage.getItem('hospitals')) || [];
             hospitals.forEach(hosp => {
+
                 if (hosp.time) {
                     const date = new Date(hosp.time);
                     const dateStr = formatDateStr(date);
@@ -335,7 +375,7 @@ const dateStr = formatDateStr(current);
                 }
             });
 
-            // 获取血压测量记�?
+            // 获取血压测量记录
             const bpRecords = JSON.parse(localStorage.getItem('bpRecords')) || [];
             const bsRecords = JSON.parse(localStorage.getItem('bsRecords')) || [];
             [...bpRecords, ...bsRecords].forEach(record => {
@@ -344,7 +384,7 @@ const dateStr = formatDateStr(current);
                 if (!events[dateStr]) events[dateStr] = [];
                 events[dateStr].push({
                     type: 'bp',
-                    title: record.systolic ? '血压测�? : '血糖测�?,
+                    title: record.systolic ? '血压测量' : '血糖测量',
                     time: record.date || record.time,
                     icon: record.systolic ? 'fa-heartbeat' : 'fa-tint',
                     color: 'primary-red',
@@ -375,6 +415,7 @@ const dateStr = formatDateStr(current);
                     return diffDays === 0;
                 case 'daily':
                     return true;
+
                 case 'every2days':
                     return diffDays % 2 === 0;
                 case 'weekly':
@@ -386,9 +427,9 @@ const dateStr = formatDateStr(current);
                 case 'every4weeks':
                     return date.getDay() === startDate.getDay() && Math.floor(diffDays / 7) % 4 === 0;
                 case 'custom':
-                    // 解析自定义频�?
+                    // 解析自定义频率
                     const customText = med.customFreqText || '';
-                    const nMatch = customText.match(/�?\d+)�?);
+                    const nMatch = customText.match(/每(\d+)天/);
                     if (nMatch) {
                         return diffDays % parseInt(nMatch[1]) === 0;
                     }
@@ -398,7 +439,7 @@ const dateStr = formatDateStr(current);
             }
         }
 
-        // 获取下一个服药日�?
+        // 获取下一个服药日期
         function getNextDate(med, current) {
             const freq = med.frequency || 'daily';
             const next = new Date(current);
@@ -409,16 +450,18 @@ const dateStr = formatDateStr(current);
                 case 'daily':
                 case 'every2days':
                     next.setDate(next.getDate() + 1);
+
                     break;
                 case 'weekly':
                 case 'every2weeks':
                 case 'every3weeks':
                 case 'every4weeks':
                     next.setDate(next.getDate() + 1);
+
                     break;
                 case 'custom':
                     const customText = med.customFreqText || '';
-                    const nMatch = customText.match(/�?\d+)�?);
+                    const nMatch = customText.match(/每(\d+)天/);
                     if (nMatch) {
                         next.setDate(next.getDate() + parseInt(nMatch[1]));
                     } else {
@@ -429,7 +472,7 @@ const dateStr = formatDateStr(current);
                     next.setDate(next.getDate() + 1);
             }
             
-            // 最多计算一�?
+            // 最多计算一年
             const maxDate = new Date();
             maxDate.setFullYear(maxDate.getFullYear() + 1);
             if (next > maxDate) return null;
@@ -445,16 +488,17 @@ const dateStr = formatDateStr(current);
             return `${year}-${month}-${day}`;
         }
 
-        // 渲染选中日期的事�?
+        // 渲染选中日期的事件
         function renderDayEvents() {
-            const monthNames = ['1�?, '2�?, '3�?, '4�?, '5�?, '6�?, '7�?, '8�?, '9�?, '10�?, '11�?, '12�?];
+            const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
             const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
             
             document.getElementById('selectedDateTitle').textContent = 
-                `${monthNames[selectedDate.getMonth()]}${selectedDate.getDate()}�?${weekDays[selectedDate.getDay()]}`;
+                `${monthNames[selectedDate.getMonth()]}${selectedDate.getDate()}日${weekDays[selectedDate.getDay()]}`;
             
             const events = getAllEvents();
             const dateStr = formatDateStr(selectedDate);
+
             const dayEvents = events[dateStr] || [];
             
             document.getElementById('eventCount').textContent = `${dayEvents.length}项日程`;
@@ -467,18 +511,21 @@ const dateStr = formatDateStr(current);
                         <i class="fas fa-calendar-check text-4xl mb-2"></i>
                         <p class="text-base">暂无日程安排</p>
                     </div>
+
                 `;
                 return;
             }
             
-            // 按类型分组排�?
+            // 按类型分组排序
             const typeOrder = { medicine: 1, register: 2, hospital: 3, bp: 4 };
             dayEvents.sort((a, b) => (typeOrder[a.type] || 5) - (typeOrder[b.type] || 5));
             
             const timeText = { morning: '早间', noon: '午间', evening: '晚间' };
             
             container.innerHTML = dayEvents.map(event => {
+
                 const bgClass = {
+
                     'primary-blue': 'bg-blue-50 border-blue-200',
                     'primary-orange': 'bg-orange-50 border-orange-200',
                     'primary-green': 'bg-green-50 border-green-200',
@@ -486,6 +533,7 @@ const dateStr = formatDateStr(current);
                 }[event.color] || 'bg-gray-50 border-gray-200';
                 
                 const iconClass = {
+
                     'primary-blue': 'bg-primary-blue',
                     'primary-orange': 'bg-primary-orange',
                     'primary-green': 'bg-primary-green',
@@ -497,20 +545,23 @@ const dateStr = formatDateStr(current);
                         <div class="w-10 h-10 ${iconClass} rounded-full flex items-center justify-center mr-3">
                             <i class="fas ${event.icon} text-white"></i>
                         </div>
+
                         <div class="flex-1">
                             <p class="font-bold text-gray-800">${event.title}</p>
                             <p class="text-sm text-gray-500">${event.detail || ''} ${event.time ? (timeText[event.time] || event.time) : ''}</p>
+
                         </div>
+
                     </div>
                 `;
             }).join('');
         }
 
+
         // 页面加载
         document.addEventListener('DOMContentLoaded', init);
+
     </script>
+
 </body>
 </html>
-
-
-
