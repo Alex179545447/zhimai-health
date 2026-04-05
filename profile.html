@@ -53,6 +53,7 @@
         </div>
     </div>
 
+
     <!-- 功能列表 -->
     <div class="px-3 -mt-10 space-y-3">
         <!-- 健康档案 -->
@@ -85,6 +86,7 @@
             </div>
         </div>
 
+
         <!-- 常用药品管理 -->
         <div class="bg-card-white card-radius p-4 shadow-sm">
             <h3 class="text-base font-bold text-gray-800 mb-3">
@@ -98,6 +100,7 @@
             </button>
         </div>
 
+
         <!-- 数据统计 -->
         <div class="bg-card-white card-radius p-4 shadow-sm">
             <h3 class="text-base font-bold text-gray-800 mb-3">
@@ -110,7 +113,7 @@
                 </div>
                 <div class="bg-purple-50 p-3 rounded-xl cursor-pointer hover:bg-purple-100" onclick="location.href='blood-pressure.html?mode=bs'">
                     <p class="text-2xl font-bold text-primary-purple" id="bsCount">0</p>
-<p class="text-xs text-gray-500">血糖记录</p>
+                    <p class="text-xs text-gray-500">血糖记录</p>
                 </div>
                 <div class="bg-orange-50 p-3 rounded-xl cursor-pointer hover:bg-orange-100" onclick="location.href='analytics.html'">
                     <p class="text-2xl font-bold text-primary-orange" id="totalCount">0</p>
@@ -118,6 +121,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- 设置功能 -->
         <div class="bg-card-white card-radius p-4 shadow-sm">
@@ -132,6 +136,7 @@
                     </div>
                     <i class="fas fa-chevron-right text-gray-400"></i>
                 </button>
+
                 <button onclick="clearAllData()" class="w-full flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-50">
                     <div class="flex items-center">
                         <i class="fas fa-trash text-red-500 mr-3 w-6"></i>
@@ -139,6 +144,7 @@
                     </div>
                     <i class="fas fa-chevron-right text-gray-400"></i>
                 </button>
+
                 <button onclick="logout()" class="w-full flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-50">
                     <div class="flex items-center">
                         <i class="fas fa-sign-out-alt text-orange-500 mr-3 w-6"></i>
@@ -146,6 +152,7 @@
                     </div>
                     <i class="fas fa-chevron-right text-gray-400"></i>
                 </button>
+
                 <button onclick="about()" class="w-full flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-50">
                     <div class="flex items-center">
                         <i class="fas fa-info-circle text-blue-500 mr-3 w-6"></i>
@@ -156,10 +163,12 @@
             </div>
         </div>
 
+
         <p class="text-center text-gray-400 text-sm py-4">家庭健康驾驶舱 v2.0</p>
     </div>
 
-    <!-- 编辑基本资料弹窗 -->
+
+    <!-- 编辑基本资料弹窗 - 问题1：调整字段顺序：姓名 -> 性别 -> 年龄 -->
     <div id="editProfileModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
         <div class="bg-card-white rounded-t-2xl w-full max-w-lg p-5 pb-8 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
@@ -168,44 +177,81 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+
             <div class="space-y-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">姓名</label>
                     <input type="text" id="editName" placeholder="请输入姓名" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">年龄</label>
-                    <input type="number" id="editAge" placeholder="请输入年龄" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">常住地</label>
-                    <input type="text" id="editCity" placeholder="如：北京市朝阳区" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">手机号码</label>
-                    <input type="tel" id="editPhone" placeholder="请输入手机号" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">紧急联系人</label>
-                    <input type="text" id="editEmergencyName" placeholder="请输入紧急联系人姓名" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">紧急联系电话</label>
-                    <input type="tel" id="editEmergencyPhone" placeholder="请输入紧急联系人电话" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
-                </div>
+
+                <!-- 问题1修复：性别移到姓名后面，年龄前面 -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">性别</label>
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="selectGender('男')" id="maleBtn" class="py-3 bg-primary-blue text-white rounded-xl font-medium">男</button>
-                        <button onclick="selectGender('女')" id="femaleBtn" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-medium">女</button>
+                        <button onclick="selectGender('女')" id="femaleBtn" class="py-3 bg-pink-500 text-white rounded-xl font-medium">女</button>
                     </div>
                 </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">年龄</label>
+                    <input type="number" id="editAge" placeholder="请输入年龄" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">常住地</label>
+                    <input type="text" id="editCity" placeholder="如：北京市朝阳区" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">手机号码</label>
+                    <input type="tel" id="editPhone" placeholder="请输入手机号" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">紧急联系人</label>
+                    <input type="text" id="editEmergencyName" placeholder="请输入紧急联系人姓名" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">紧急联系电话</label>
+                    <input type="tel" id="editEmergencyPhone" placeholder="请输入紧急联系人电话" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+
                 <button onclick="saveBasicProfile()" class="w-full py-4 bg-primary-blue text-white text-lg font-bold rounded-xl">
                     <i class="fas fa-check mr-2"></i>保存
                 </button>
             </div>
         </div>
     </div>
+
+
+    <!-- 问题3：完善档案引导弹窗 -->
+    <div id="healthGuideModal" class="fixed inset-0 bg-black/70 z-[60] hidden flex items-center justify-center p-6">
+        <div class="bg-white rounded-3xl w-full max-w-md p-8 text-center shadow-2xl">
+            <!-- 图标 -->
+            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-file-medical text-4xl text-primary-blue"></i>
+            </div>
+            
+            <!-- 大字体提示 -->
+            <h2 class="text-3xl font-bold text-gray-800 mb-4 leading-tight">是否继续完善<br>健康档案？</h2>
+            
+            <p class="text-gray-500 text-lg mb-8">完善健康档案有助于我们更好地为您服务</p>
+            
+            <!-- 两个按钮 -->
+            <div class="space-y-3">
+                <button onclick="continueHealthRecord()" class="w-full py-4 bg-primary-blue text-white text-xl font-bold rounded-2xl shadow-lg hover:bg-blue-600 transition-colors">
+                    <i class="fas fa-arrow-right mr-2"></i>继续完善
+                </button>
+                
+                <button onclick="skipHealthRecord()" class="w-full py-4 bg-gray-100 text-gray-600 text-xl font-bold rounded-2xl hover:bg-gray-200 transition-colors">
+                    稍后再说
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- 编辑健康档案弹窗 -->
     <div id="healthRecordModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
@@ -216,30 +262,38 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+
             <div class="space-y-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">药物过敏史</label>
                     <input type="text" id="editAllergy" placeholder="如：青霉素过敏、阿司匹林" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                     <p class="text-xs text-orange-500 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>设置后，服药时会提醒您注意</p>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">既往病史</label>
                     <input type="text" id="editHistory" placeholder="如：高血压、糖尿病" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">手术史</label>
                     <input type="text" id="editSurgery" placeholder="如：2020年阑尾炎手术" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">家族病史</label>
                     <input type="text" id="editFamily" placeholder="如：父亲有高血压史" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                 </div>
+
                 <button onclick="saveHealthRecord()" class="w-full py-4 bg-primary-green text-white text-lg font-bold rounded-xl">
                     <i class="fas fa-check mr-2"></i>保存健康档案
                 </button>
-            </div>
+
+</div>
         </div>
+
     </div>
+
 
     <!-- 添加常用药品弹窗 -->
     <div id="commonMedsModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-end justify-center">
@@ -250,18 +304,22 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+
             <div class="space-y-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">药品名称 *</label>
                     <input type="text" id="commonMedName" placeholder="如：硝苯地平、阿莫西林" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                     <p class="text-xs text-gray-400 mt-1">只需输入药品名称，方便快速调取</p>
                 </div>
+
                 <button onclick="saveCommonMed()" class="w-full py-4 bg-primary-purple text-white text-lg font-bold rounded-xl">
                     <i class="fas fa-plus mr-2"></i>添加
                 </button>
+
             </div>
         </div>
     </div>
+
 
     <!-- 底部导航 -->
     <nav class="fixed bottom-0 left-0 right-0 bg-card-white border-t border-gray-200 px-2 py-2 z-40">
@@ -270,38 +328,51 @@
                 <i class="fas fa-home text-xl"></i>
                 <span class="text-xs">首页</span>
             </a>
+
             <a href="medicine.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
                 <i class="fas fa-pills text-xl"></i>
                 <span class="text-xs">药品</span>
             </a>
+
             <a href="blood-pressure.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
                 <i class="fas fa-heartbeat text-xl"></i>
                 <span class="text-xs">测量</span>
             </a>
+
             <a href="calendar.html" class="flex flex-col items-center py-1 px-3 text-gray-400">
                 <i class="fas fa-calendar text-xl"></i>
                 <span class="text-xs">日历</span>
             </a>
+
             <a href="profile.html" class="flex flex-col items-center py-1 px-3 text-primary-blue">
                 <i class="fas fa-user text-xl"></i>
                 <span class="text-xs font-medium">我的</span>
             </a>
+
         </div>
     </nav>
+
 
     <script>
         let selectedGender = '男';
 
+        // 问题2：完善个人中心信息显示 - 增强版loadProfile
         function loadProfile() {
             const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+            
+            // 显示姓名
             if (profile.name) {
                 document.getElementById('profileName').textContent = profile.name;
-                document.getElementById('headerName').textContent = profile.name;
+            } else {
+                document.getElementById('profileName').textContent = '姓名';
             }
+            
+            // 显示年龄和性别信息
             if (profile.age || profile.gender) {
                 const info = [profile.age ? profile.age + '岁' : '', profile.gender || ''].filter(Boolean).join(' · ');
                 document.getElementById('profileInfo').textContent = info || '已设置';
-                document.getElementById('headerInfo').textContent = info || '已设置';
+            } else {
+                document.getElementById('profileInfo').textContent = '去完善健康档案';
             }
 
             // 健康档案
@@ -314,6 +385,7 @@
             if (healthRecord.gender) selectedGender = healthRecord.gender;
         }
 
+
         function loadStats() {
             const bp = JSON.parse(localStorage.getItem('bpRecords') || '[]');
             const bs = JSON.parse(localStorage.getItem('bsRecords') || '[]');
@@ -322,6 +394,7 @@
             document.getElementById('bsCount').textContent = bs.length;
             document.getElementById('totalCount').textContent = bp.length + bs.length + meds.length;
         }
+
 
         function loadCommonMeds() {
             const commonMeds = JSON.parse(localStorage.getItem('commonMeds') || '[]');
@@ -332,22 +405,28 @@
                 return;
             }
 
+
             container.innerHTML = commonMeds.map((m, i) => `
                 <div class="flex items-center justify-between bg-purple-50 p-3 rounded-xl">
                     <div class="flex-1">
                         <p class="font-bold">${m.name}</p>
                     </div>
+
                     <div class="flex space-x-2">
                         <button onclick="quickAddToMeds('${m.name}')" class="px-3 py-1 bg-primary-blue text-white text-sm rounded-lg">
                             <i class="fas fa-plus mr-1"></i>添加
                         </button>
+
                         <button onclick="deleteCommonMed(${i})" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center">
                             <i class="fas fa-trash text-sm"></i>
                         </button>
                     </div>
+
                 </div>
+
             `).join('');
         }
+
 
         function showEditProfile() {
             const profile = JSON.parse(localStorage.getItem('profile') || '{}');
@@ -362,6 +441,7 @@
             document.getElementById('editProfileModal').classList.remove('hidden');
         }
 
+
         function showHealthRecord() {
             const record = JSON.parse(localStorage.getItem('healthRecord') || '{}');
             document.getElementById('editAllergy').value = record.allergy || '';
@@ -371,28 +451,35 @@
             document.getElementById('healthRecordModal').classList.remove('hidden');
         }
 
+
         function showCommonMedsModal() {
             document.getElementById('commonMedsModal').classList.remove('hidden');
         }
+
 
         function showSettings() {
             // 设置页面功能
         }
 
+
         function closeModal(modalId) {
             document.getElementById(modalId).classList.add('hidden');
         }
+
 
         function selectGender(g) {
             selectedGender = g;
             updateGenderButtons();
         }
 
+
         function updateGenderButtons() {
             document.getElementById('maleBtn').className = selectedGender === '男' ? 'py-3 bg-primary-blue text-white rounded-xl font-medium' : 'py-3 bg-gray-100 text-gray-600 rounded-xl font-medium';
             document.getElementById('femaleBtn').className = selectedGender === '女' ? 'py-3 bg-pink-500 text-white rounded-xl font-medium' : 'py-3 bg-gray-100 text-gray-600 rounded-xl font-medium';
         }
 
+
+        // 问题2 & 问题3：保存基本资料后显示引导弹窗
         function saveBasicProfile() {
             const name = document.getElementById('editName').value.trim();
             const age = document.getElementById('editAge').value.trim();
@@ -408,7 +495,8 @@
                 city: city,
                 phone: phone,
                 emergencyName: emergencyName,
-                emergencyPhone: emergencyPhone
+                emergencyPhone: emergencyPhone,
+                updatedAt: new Date().toISOString()
             };
             
             localStorage.setItem('profile', JSON.stringify(profile));
@@ -420,8 +508,46 @@
             
             closeModal('editProfileModal');
             loadProfile();
+            
+            // 问题2：显示保存成功的提示
             alert('资料已保存！');
+            
+            // 问题3：检查是否需要显示健康档案引导
+            checkAndShowHealthGuide();
         }
+        
+        // 问题3：检查并显示健康档案引导弹窗
+        function checkAndShowHealthGuide() {
+            // 检查用户是否已完成健康档案引导
+            const healthGuideCompleted = localStorage.getItem('healthGuideCompleted');
+            const healthRecord = JSON.parse(localStorage.getItem('healthRecord') || '{}');
+            
+            // 如果用户还没有完成引导，或者健康档案是空的，显示引导
+            if (!healthGuideCompleted && !healthRecord.allergy && !healthRecord.history) {
+                document.getElementById('healthGuideModal').classList.remove('hidden');
+            }
+        }
+        
+        // 问题3：继续完善健康档案
+        function continueHealthRecord() {
+            // 关闭引导弹窗
+            closeModal('healthGuideModal');
+            // 标记引导已完成（但不保存用户选择了继续）
+            // 打开健康档案编辑弹窗
+            setTimeout(() => {
+                showHealthRecord();
+            }, 300);
+        }
+        
+        // 问题3：稍后再说
+        function skipHealthRecord() {
+            // 关闭引导弹窗
+            closeModal('healthGuideModal');
+            // 记录用户已完成引导，选择稍后再说
+            localStorage.setItem('healthGuideCompleted', 'true');
+            localStorage.setItem('healthGuideSkippedAt', new Date().toISOString());
+        }
+
 
         function saveHealthRecord() {
             const record = {
@@ -434,10 +560,14 @@
             };
             
             localStorage.setItem('healthRecord', JSON.stringify(record));
+            // 标记健康档案引导已完成
+            localStorage.setItem('healthGuideCompleted', 'true');
+            
             closeModal('healthRecordModal');
             loadProfile();
             alert('健康档案已保存！');
         }
+
 
         function saveCommonMed() {
             const name = document.getElementById('commonMedName').value.trim();
@@ -457,6 +587,7 @@
             alert('常用药品已添加！');
         }
 
+
         function deleteCommonMed(index) {
             if (confirm('确定删除这个常用药品？')) {
                 let commonMeds = JSON.parse(localStorage.getItem('commonMeds') || '[]');
@@ -466,11 +597,13 @@
             }
         }
 
+
         // 快速添加到我的药品
         function quickAddToMeds(medName) {
             // 跳转到药品页面并自动填充名称
             window.location.href = 'medicine.html?add=' + encodeURIComponent(medName);
         }
+
 
         function exportData() {
             // 生成Excel格式（CSV，可用Excel打开）
@@ -534,6 +667,7 @@
             alert('数据导出成功！\n文件格式：CSV（可用Excel打开）');
         }
 
+
         function clearAllData() {
             if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
                 localStorage.clear();
@@ -542,6 +676,7 @@
             }
         }
 
+
         function logout() {
             if (confirm('确定要退出登录吗？')) {
                 localStorage.removeItem('userInfo');
@@ -549,13 +684,32 @@
             }
         }
 
+
         function about() {
             alert('AI健康助手 v2.0\n\n您的智能健康管理伙伴\n\n功能：\n• 药品管理（支持拍照识别）\n• 血压血糖监测\n• 就医挂号提醒\n• 数据分析（周/月/季/年）\n• 健康档案管理\n• 数据导出（Excel格式）\n\n专为老年人设计，大字体大按钮，方便操作。');
         }
 
+        // 页面加载时执行
         loadProfile();
         loadStats();
         loadCommonMeds();
+        
+        // 问题3：首次进入时检查是否需要显示引导
+        window.addEventListener('load', function() {
+            // 如果用户已经完善了基本信息但还没填写健康档案，显示引导
+            const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+            const healthRecord = JSON.parse(localStorage.getItem('healthRecord') || '{}');
+            const healthGuideCompleted = localStorage.getItem('healthGuideCompleted');
+            
+            // 如果有姓名但没有健康档案，且没有完成引导
+            if (profile.name && profile.updatedAt && !healthGuideCompleted && !healthRecord.allergy && !healthRecord.history) {
+                // 延迟显示引导
+                setTimeout(() => {
+                    document.getElementById('healthGuideModal').classList.remove('hidden');
+                }, 1000);
+            }
+        });
     </script>
+
 </body>
 </html>
