@@ -1,11 +1,13 @@
 /**
  * 智脉AI健康助手 - API服务
- * 连接后端服务器，实现数据云端存储
+ * 对接后端服务器: http://47.110.151.230:3000
+ * 实现用户注册/登录和数据云端同步
  */
 
-const API_BASE_URL = 'https://health-api.zhimai-ai.cn/api';
+// API基础地址
+const API_BASE_URL = 'http://47.110.151.230:3000/api';
 
-// 获取用户ID（本地存储）
+// 获取或创建用户ID
 function getUserId() {
     let userId = localStorage.getItem('health_user_id');
     if (!userId) {
@@ -33,284 +35,325 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
     try {
         const response = await fetch(url, options);
         const result = await response.json();
-        
+
         // 如果服务器返回了新的userId，保存它
         if (result.userId) {
             localStorage.setItem('health_user_id', result.userId);
         }
-        
-        return result;
+
+        return { ...result, _fromCloud: true };
     } catch (error) {
         console.error('API请求失败:', error);
-        // 如果API不可用，回退到localStorage
-        return { success: false, error: error.message, fallback: true };
+        // API失败时回退到localStorage
+        return { success: false, error: error.message, _fromCloud: false, _fallback: true };
     }
 }
+
+// ============ 用户认证API ============
+
+const AuthAPI = {
+    // 注册
+    async register(username, password) {
+        const userId = getUserId();
+        const result = await apiRequest('/register', 'POST', {
+            userId,
+            username: username || 'user_' + Date.now(),
+            password: password || '',
+            createdAt: new Date().toISOString()
+        });
+
+        if (result.success) {
+            // 保存登录状态
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userInfo', JSON.stringify({
+                userId: result.userId || userId,
+                username: username,
+                loginTime: new Date().toISOString()
+            }));
+        }
+
+        return result;
+    },
+
+    // 登录
+    async login(username, password) {
+        const userId = getUserId();
+        const result = await apiRequest('/login', 'POST', {
+            userId,
+            username: username || 'guest',
+            password: password || ''
+        });
+
+        if (result.success) {
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userInfo', JSON.stringify({
+                userId: result.userId || userId,
+                username: username,
+                loginTime: new Date().toISOString()
+            }));
+        }
+
+        return result;
+    },
+
+    // 检查登录状态
+    isLoggedIn() {
+        return localStorage.getItem('isLoggedIn') === 'true';
+    },
+
+    // 退出登录
+    logout() {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userInfo');
+        // 保留userId，下次登录可以关联数据
+    }
+};
+
+// ============ 数据存储API ============
+
+const DataAPI = {
+    // 保存用户数据（药品、血压、档案等）
+    async saveData(type, data) {
+        const userId = getUserId();
+        const result = await apiRequest('/save', 'POST', {
+            userId,
+            type,  // 'medicines', 'bpRecords', 'bsRecords', 'profile', 'healthRecord', 'reminders'
+            data,
+            updatedAt: new Date().toISOString()
+        });
+
+        if (result._fallback) {
+            // 回退到localStorage
+            localStorage.setItem(type, JSON.stringify(data));
+            return { success: true, _fallback: true };
+        }
+
+        // 同时保存到本地作为备份
+        localStorage.setItem(type, JSON.stringify(data));
+
+        return result;
+    },
+
+    // 获取用户数据
+    async getData(type) {
+        const userId = getUserId();
+        const result = await apiRequest('/get', 'POST', {
+            userId,
+            type
+        });
+
+        if (result.success && result.data) {
+            // 优先使用云端数据，同时更新本地
+            localStorage.setItem(type, JSON.stringify(result.data));
+            return { ...result, _fromCloud: true };
+        }
+
+        // 回退到localStorage
+        const localData = localStorage.getItem(type);
+        return {
+            success: true,
+            data: localData ? JSON.parse(localData) : null,
+            _fallback: true,
+            _fromCloud: false
+        };
+    },
+
+    // 批量同步所有数据
+    async syncAll() {
+        const userId = getUserId();
+        const dataTypes = ['medicines', 'bpRecords', 'bsRecords', 'profile', 'healthRecord', 'commonMedicines', 'reminders'];
+        const cloudData = {};
+
+        // 获取所有云端数据
+        for (const type of dataTypes) {
+            const result = await DataAPI.getData(type);
+            if (result._fromCloud && result.data) {
+                cloudData[type] = result.data;
+            }
+        }
+
+        // 合并数据（云端优先，或取较新的）
+        for (const type of dataTypes) {
+            if (cloudData[type]) {
+                localStorage.setItem(type, JSON.stringify(cloudData[type]));
+            }
+        }
+
+        return { success: true, data: cloudData };
+    },
+
+    // 上传所有本地数据到云端
+    async uploadAll() {
+        const userId = getUserId();
+        const dataTypes = ['medicines', 'bpRecords', 'bsRecords', 'profile', 'healthRecord', 'commonMedicines', 'reminders'];
+        const allData = {};
+
+        for (const type of dataTypes) {
+            const localData = localStorage.getItem(type);
+            if (localData) {
+                allData[type] = JSON.parse(localData);
+            }
+        }
+
+        const result = await apiRequest('/save', 'POST', {
+            userId,
+            type: 'all',
+            data: allData,
+            updatedAt: new Date().toISOString()
+        });
+
+        return result;
+    }
+};
 
 // ============ 药品API ============
 
 const MedicineAPI = {
-    // 获取所有药品
     async getAll() {
-        const result = await apiRequest('/medicines');
-        if (result.fallback || !result.success) {
-            // 回退到localStorage
-            return { success: true, data: JSON.parse(localStorage.getItem('medicines') || '[]'), local: true };
-        }
-        return result;
+        const result = await DataAPI.getData('medicines');
+        return {
+            success: true,
+            data: result.data || [],
+            local: result._fallback
+        };
     },
 
-    // 添加药品
     async add(medicine) {
-        const result = await apiRequest('/medicines', 'POST', medicine);
-        if (result.fallback || !result.success) {
-            // 回退到localStorage
-            const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-            medicine.id = Date.now();
-            medicine.createdAt = new Date().toISOString();
-            medicines.push(medicine);
-            localStorage.setItem('medicines', JSON.stringify(medicines));
-            return { success: true, data: medicine, local: true };
-        }
-        return result;
+        const result = await DataAPI.getData('medicines');
+        const medicines = result.data || [];
+        medicine.id = Date.now();
+        medicine.createdAt = new Date().toISOString();
+        medicines.push(medicine);
+
+        const saveResult = await DataAPI.saveData('medicines', medicines);
+        return { success: saveResult.success, data: medicine, local: saveResult._fallback };
     },
 
-    // 更新药品
     async update(id, medicine) {
-        const result = await apiRequest(`/medicines/${id}`, 'PUT', medicine);
-        if (result.fallback || !result.success) {
-            const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-            const index = medicines.findIndex(m => m.id == id);
-            if (index >= 0) {
-                medicines[index] = { ...medicines[index], ...medicine };
-                localStorage.setItem('medicines', JSON.stringify(medicines));
-            }
-            return { success: true, data: medicines[index], local: true };
+        const result = await DataAPI.getData('medicines');
+        const medicines = result.data || [];
+        const index = medicines.findIndex(m => m.id == id);
+        if (index >= 0) {
+            medicines[index] = { ...medicines[index], ...medicine };
         }
-        return result;
+
+        const saveResult = await DataAPI.saveData('medicines', medicines);
+        return { success: saveResult.success, data: medicines[index], local: saveResult._fallback };
     },
 
-    // 删除药品
     async delete(id) {
-        const result = await apiRequest(`/medicines/${id}`, 'DELETE');
-        if (result.fallback || !result.success) {
-            let medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-            medicines = medicines.filter(m => m.id != id);
-            localStorage.setItem('medicines', JSON.stringify(medicines));
-            return { success: true, local: true };
-        }
-        return result;
+        const result = await DataAPI.getData('medicines');
+        let medicines = result.data || [];
+        medicines = medicines.filter(m => m.id != id);
+
+        const saveResult = await DataAPI.saveData('medicines', medicines);
+        return { success: saveResult.success, local: saveResult._fallback };
     },
 
-    // 标记服用
-    async take(id, taken) {
-        const result = await apiRequest(`/medicines/${id}/take`, 'POST', { taken });
-        if (result.fallback || !result.success) {
-            let medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-            const medicine = medicines.find(m => m.id == id);
-            if (medicine) {
-                medicine.taken = taken;
-                medicine.takenTime = taken ? new Date().toISOString() : null;
-                localStorage.setItem('medicines', JSON.stringify(medicines));
-            }
-            return { success: true, local: true };
+    async markTaken(id, taken) {
+        const result = await DataAPI.getData('medicines');
+        const medicines = result.data || [];
+        const medicine = medicines.find(m => m.id == id);
+        if (medicine) {
+            medicine.taken = taken;
+            medicine.takenTime = taken ? new Date().toISOString() : null;
         }
-        return result;
+
+        const saveResult = await DataAPI.saveData('medicines', medicines);
+        return { success: saveResult.success, local: saveResult._fallback };
     },
 
-    // 重置今日
     async resetToday() {
-        const result = await apiRequest('/medicines/reset-today', 'POST');
-        if (result.fallback || !result.success) {
-            let medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-            medicines.forEach(m => {
-                m.taken = false;
-                m.takenTime = null;
-            });
-            localStorage.setItem('medicines', JSON.stringify(medicines));
-            return { success: true, local: true };
-        }
-        return result;
+        const result = await DataAPI.getData('medicines');
+        const medicines = result.data || [];
+        medicines.forEach(m => {
+            m.taken = false;
+            m.takenTime = null;
+        });
+
+        const saveResult = await DataAPI.saveData('medicines', medicines);
+        return { success: saveResult.success, local: saveResult._fallback };
     }
 };
 
 // ============ 血压血糖记录API ============
 
 const BPAPI = {
-    // 获取记录
-    async getRecords(type = null, limit = null) {
-        let endpoint = '/bp-records';
-        const params = [];
-        if (type) params.push(`type=${type}`);
-        if (limit) params.push(`limit=${limit}`);
-        if (params.length > 0) endpoint += '?' + params.join('&');
-
-        const result = await apiRequest(endpoint);
-        if (result.fallback || !result.success) {
-            const key = type === 'bp' ? 'bpRecords' : type === 'bs' ? 'bsRecords' : 'bpRecords';
-            return { success: true, data: JSON.parse(localStorage.getItem(key) || '[]'), local: true };
-        }
-        return result;
+    async getRecords(type = 'bp') {
+        const key = type === 'bs' ? 'bsRecords' : 'bpRecords';
+        const result = await DataAPI.getData(key);
+        return {
+            success: true,
+            data: result.data || [],
+            local: result._fallback
+        };
     },
 
-    // 添加记录
     async add(record) {
-        const result = await apiRequest('/bp-records', 'POST', record);
-        if (result.fallback || !result.success) {
-            const key = record.type === 'bp' ? 'bpRecords' : 'bsRecords';
-            const records = JSON.parse(localStorage.getItem(key) || '[]');
-            record.id = Date.now();
-            record.createdAt = new Date().toISOString();
-            records.unshift(record);
-            localStorage.setItem(key, JSON.stringify(records));
-            return { success: true, data: record, local: true };
-        }
-        return result;
+        const key = record.type === 'bs' ? 'bsRecords' : 'bpRecords';
+        const result = await DataAPI.getData(key);
+        const records = result.data || [];
+        record.id = Date.now();
+        record.createdAt = new Date().toISOString();
+        records.unshift(record);
+
+        const saveResult = await DataAPI.saveData(key, records);
+        return { success: saveResult.success, data: record, local: saveResult._fallback };
     },
 
-    // 删除记录
     async delete(id, type) {
-        const result = await apiRequest(`/bp-records/${id}`, 'DELETE');
-        if (result.fallback || !result.success) {
-            const key = type === 'bp' ? 'bpRecords' : 'bsRecords';
-            let records = JSON.parse(localStorage.getItem(key) || '[]');
-            records = records.filter(r => r.id != id);
-            localStorage.setItem(key, JSON.stringify(records));
-            return { success: true, local: true };
-        }
-        return result;
+        const key = type === 'bs' ? 'bsRecords' : 'bpRecords';
+        const result = await DataAPI.getData(key);
+        let records = result.data || [];
+        records = records.filter(r => r.id != id);
+
+        const saveResult = await DataAPI.saveData(key, records);
+        return { success: saveResult.success, local: saveResult._fallback };
     }
 };
 
-// ============ 就医提醒API ============
+// ============ 健康档案API ============
 
-const ReminderAPI = {
-    // 获取提醒
-    async getAll(status = null) {
-        let endpoint = '/reminders';
-        if (status) endpoint += `?status=${status}`;
-
-        const result = await apiRequest(endpoint);
-        if (result.fallback || !result.success) {
-            return { success: true, data: JSON.parse(localStorage.getItem('reminders') || '[]'), local: true };
-        }
-        return result;
-    },
-
-    // 添加提醒
-    async add(reminder) {
-        const result = await apiRequest('/reminders', 'POST', reminder);
-        if (result.fallback || !result.success) {
-            const reminders = JSON.parse(localStorage.getItem('reminders') || '[]');
-            reminder.id = Date.now();
-            reminder.createdAt = new Date().toISOString();
-            reminder.status = 'pending';
-            reminders.push(reminder);
-            localStorage.setItem('reminders', JSON.stringify(reminders));
-            return { success: true, data: reminder, local: true };
-        }
-        return result;
-    },
-
-    // 更新提醒
-    async update(id, reminder) {
-        const result = await apiRequest(`/reminders/${id}`, 'PUT', reminder);
-        if (result.fallback || !result.success) {
-            let reminders = JSON.parse(localStorage.getItem('reminders') || '[]');
-            const index = reminders.findIndex(r => r.id == id);
-            if (index >= 0) {
-                reminders[index] = { ...reminders[index], ...reminder };
-                localStorage.setItem('reminders', JSON.stringify(reminders));
-            }
-            return { success: true, data: reminders[index], local: true };
-        }
-        return result;
-    },
-
-    // 删除提醒
-    async delete(id) {
-        const result = await apiRequest(`/reminders/${id}`, 'DELETE');
-        if (result.fallback || !result.success) {
-            let reminders = JSON.parse(localStorage.getItem('reminders') || '[]');
-            reminders = reminders.filter(r => r.id != id);
-            localStorage.setItem('reminders', JSON.stringify(reminders));
-            return { success: true, local: true };
-        }
-        return result;
-    }
-};
-
-// ============ 用户信息API ============
-
-const UserAPI = {
-    // 获取用户信息
+const ProfileAPI = {
     async get() {
-        const result = await apiRequest('/user');
-        if (result.fallback || !result.success) {
-            return { success: true, data: JSON.parse(localStorage.getItem('healthRecord') || '{}'), local: true };
-        }
-        return result;
+        const result = await DataAPI.getData('profile');
+        return {
+            success: true,
+            data: result.data || {},
+            local: result._fallback
+        };
     },
 
-    // 更新用户信息
-    async update(userData) {
-        const result = await apiRequest('/user', 'PUT', userData);
-        if (result.fallback || !result.success) {
-            const current = JSON.parse(localStorage.getItem('healthRecord') || '{}');
-            const updated = { ...current, ...userData };
-            localStorage.setItem('healthRecord', JSON.stringify(updated));
-            return { success: true, data: updated, local: true };
-        }
-        return result;
+    async update(profileData) {
+        const result = await DataAPI.getData('profile');
+        const profile = { ...(result.data || {}), ...profileData };
+        profile.updatedAt = new Date().toISOString();
+
+        const saveResult = await DataAPI.saveData('profile', profile);
+        return { success: saveResult.success, data: profile, local: saveResult._fallback };
     }
 };
 
-// ============ 统计API ============
+// ============ 健康检查 ============
 
-const StatsAPI = {
-    async get() {
-        const result = await apiRequest('/stats');
-        if (result.fallback || !result.success) {
-            // 计算本地统计
-            const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
-            const todayMeds = medicines.filter(m => m.frequency !== 'once');
-            const taken = todayMeds.filter(m => m.taken).length;
-            
-            const bpRecords = JSON.parse(localStorage.getItem('bpRecords') || '[]');
-            const today = new Date().toISOString().split('T')[0];
-            const todayBP = bpRecords.filter(r => r.measureTime && r.measureTime.startsWith(today)).length;
-
-            return {
-                success: true,
-                data: {
-                    medicine: { total: todayMeds.length, taken, pending: todayMeds.length - taken },
-                    bloodPressure: { today: todayBP },
-                    reminders: { thisWeek: 0 }
-                },
-                local: true
-            };
-        }
-        return result;
-    }
-};
-
-// 健康检查
 async function checkAPIHealth() {
     try {
-        const result = await apiRequest('/health');
-        return result.success;
+        const response = await fetch('http://47.110.151.230:3000/health');
+        const result = await response.json();
+        return result.success !== false;
     } catch {
         return false;
     }
 }
 
-// 导出
+// ============ 导出 ============
+
 window.HealthAPI = {
+    Auth: AuthAPI,
+    Data: DataAPI,
     Medicine: MedicineAPI,
     BP: BPAPI,
-    Reminder: ReminderAPI,
-    User: UserAPI,
-    Stats: StatsAPI,
+    Profile: ProfileAPI,
     checkHealth: checkAPIHealth,
     getUserId
 };

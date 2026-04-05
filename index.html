@@ -6,6 +6,7 @@
     <title>AI健康助手</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="api.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -58,11 +59,13 @@
         </div>
     </header>
 
+
     <main class="px-3 py-3 pb-20">
         <!-- 当前时段服药提醒 -->
         <div id="periodAlert" class="bg-gradient-to-r from-primary-orange to-orange-400 text-white rounded-2xl p-4 mb-3">
             <!-- 动态生成 -->
         </div>
+
 
         <!-- 4个大按钮 -->
         <div class="grid grid-cols-2 gap-3 mb-3">
@@ -87,6 +90,7 @@
             </a>
         </div>
 
+
         <!-- 待服药提醒列表 -->
         <div class="bg-card-white card-radius p-4 shadow-sm mb-3">
             <div class="flex items-center justify-between mb-3">
@@ -99,6 +103,7 @@
                 <!-- 动态生成 -->
             </div>
         </div>
+
 
         <!-- 今日概览 -->
         <div class="bg-card-white card-radius p-4 shadow-sm mb-3">
@@ -121,6 +126,7 @@
             </div>
         </div>
 
+
         <!-- 快速操作 -->
         <div class="bg-card-white card-radius p-4 shadow-sm">
             <h3 class="text-base font-bold text-gray-800 mb-3">
@@ -139,9 +145,10 @@
                     <i class="fas fa-tint text-2xl text-purple-500 mb-1"></i>
                     <span class="text-xs font-medium text-gray-700">测血糖</span>
                 </button>
-                </div>
+            </div>
         </div>
     </main>
+
 
     <!-- 底部导航 -->
     <nav class="fixed bottom-0 left-0 right-0 bg-card-white border-t border-gray-200 px-2 py-2 z-50">
@@ -169,6 +176,7 @@
         </div>
     </nav>
 
+
     <script>
         // 大字体提示弹窗
         function showBigAlert(message) {
@@ -178,6 +186,7 @@
         function closeBigAlert() {
             document.getElementById('bigAlert').classList.add('hidden');
         }
+
 
         // 请求通知权限
         function requestNotificationPermission() {
@@ -192,6 +201,7 @@
             }
         }
 
+
         // 获取当前时段
         function getCurrentPeriod() {
             const hour = new Date().getHours();
@@ -199,6 +209,7 @@
             if (hour >= 12 && hour < 18) return { key: 'noon', text: '午间', icon: 'fa-cloud-sun' };
             return { key: 'evening', text: '晚间', icon: 'fa-moon' };
         }
+
 
         // 渲染当前时段提醒
         function renderPeriodAlert() {
@@ -247,6 +258,7 @@
             }
         }
 
+
         // 一键服用当前时段药品
         function takePeriodMedicine(period) {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
@@ -261,6 +273,7 @@
             updateStats();
             showBigAlert('已记录服药！');
         }
+
 
         // 一键服用所有待服药
         function takeAllPending() {
@@ -284,6 +297,7 @@
             }
         }
 
+
         // 渲染待服药列表
         function renderPendingMeds() {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
@@ -302,6 +316,7 @@
                 `;
                 return;
             }
+
 
             container.innerHTML = pending.map(m => {
                 const timeText = { morning: '早', noon: '午', evening: '晚' }[m.time] || '早';
@@ -329,6 +344,7 @@
             }).join('');
         }
 
+
         // 单独服用某个药品
         function takeMedicine(index) {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
@@ -339,6 +355,7 @@
             renderPendingMeds();
             updateStats();
         }
+
 
         // 更新统计数据
         function updateStats() {
@@ -355,6 +372,7 @@
             document.getElementById('todayPending').textContent = pending.length;
         }
 
+
         // 加载用户信息
         function loadProfile() {
             const profile = JSON.parse(localStorage.getItem('profile') || '{}');
@@ -366,6 +384,7 @@
             }
         }
 
+
         // 登录检查
         function checkLogin() {
             const userInfo = localStorage.getItem('userInfo');
@@ -376,6 +395,7 @@
             return true;
         }
 
+
         // 退出登录
         function logout() {
             if (confirm('确定要退出登录吗？')) {
@@ -384,13 +404,28 @@
             }
         }
 
+
         // 初始化
         if (checkLogin()) {
             loadProfile();
             renderPeriodAlert();
             renderPendingMeds();
             updateStats();
+            // 尝试同步云端数据
+            syncCloudData();
         }
+
+        // 同步云端数据
+        async function syncCloudData() {
+            if (typeof HealthAPI !== 'undefined') {
+                try {
+                    await HealthAPI.Data.syncAll();
+                } catch (e) {
+                    console.log('云端同步暂不可用，将使用本地数据');
+                }
+            }
+        }
+
 
         // 每分钟刷新一次
         setInterval(() => {
@@ -399,5 +434,6 @@
             }
         }, 60000);
     </script>
+
 </body>
 </html>

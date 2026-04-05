@@ -125,6 +125,14 @@
         <p class="text-white/50 text-sm mt-8">v2.0</p>
     </div>
 
+    <!-- 加载中弹窗 -->
+    <div id="loadingModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-6">
+        <div class="bg-white rounded-3xl p-8 text-center max-w-xs">
+            <i class="fas fa-spinner fa-spin text-4xl text-primary-blue mb-4"></i>
+            <p id="loadingText" class="text-lg font-medium text-gray-700">加载中...</p>
+        </div>
+    </div>
+
     <!-- 微信扫码弹窗（模拟） -->
     <div id="wechatModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-6">
         <div class="bg-white rounded-3xl p-6 max-w-sm w-full">
@@ -230,6 +238,7 @@
         </div>
     </div>
 
+    <script src="api.js"></script>
     <script>
         // 检查是否已登录
         function checkLogin() {
@@ -252,44 +261,81 @@
             document.getElementById('wechatModal').classList.add('hidden');
         }
 
-        // 确认微信登录（模拟）
-        function confirmWechatLogin() {
-            // 模拟微信用户信息
-            const mockUser = {
-                openid: 'wx_' + Date.now(),
-                nickname: '微信用户',
-                avatar: '',
-                loginType: 'wechat',
-                loginTime: new Date().toISOString()
-            };
-            
-            localStorage.setItem('userInfo', JSON.stringify(mockUser));
-            
+        // 确认微信登录（使用真实API）
+        async function confirmWechatLogin() {
             closeWechatModal();
             
-            // 显示登录成功动画
-            alert('登录成功！');
+            // 显示加载中
+            document.getElementById('loadingText').textContent = '正在连接服务器...';
+            document.getElementById('loadingModal').classList.remove('hidden');
             
-            // 跳转到首页
+            try {
+                // 尝试注册/登录
+                const result = await HealthAPI.Auth.login('wechat_' + Date.now(), '');
+                
+                if (result.success) {
+                    // 尝试同步数据
+                    await HealthAPI.Data.syncAll();
+                    
+                    alert('登录成功！您的数据已同步到云端');
+                } else {
+                    // API不可用，使用本地模式
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userInfo', JSON.stringify({
+                        userId: HealthAPI.getUserId(),
+                        username: '微信用户',
+                        loginType: 'wechat',
+                        loginTime: new Date().toISOString()
+                    }));
+                    
+                    alert('登录成功！（本地模式）');
+                }
+            } catch (e) {
+                console.error('登录失败:', e);
+                // 即使API失败，也允许本地使用
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userInfo', JSON.stringify({
+                    userId: HealthAPI.getUserId(),
+                    username: '微信用户',
+                    loginType: 'wechat',
+                    loginTime: new Date().toISOString()
+                }));
+                
+                alert('登录成功！（离线模式）');
+            }
+            
+            document.getElementById('loadingModal').classList.add('hidden');
             window.location.href = 'index.html';
         }
 
         // 游客模式登录
-        function guestLogin() {
-            const guestUser = {
-                openid: 'guest_' + Date.now(),
-                nickname: '游客',
-                avatar: '',
-                loginType: 'guest',
-                loginTime: new Date().toISOString()
-            };
+        async function guestLogin() {
+            document.getElementById('loadingText').textContent = '正在初始化...';
+            document.getElementById('loadingModal').classList.remove('hidden');
             
-            localStorage.setItem('userInfo', JSON.stringify(guestUser));
+            try {
+                // 尝试注册/登录
+                await HealthAPI.Auth.login('guest', '');
+                
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userInfo', JSON.stringify({
+                    userId: HealthAPI.getUserId(),
+                    username: '游客',
+                    loginType: 'guest',
+                    loginTime: new Date().toISOString()
+                }));
+            } catch (e) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userInfo', JSON.stringify({
+                    userId: HealthAPI.getUserId(),
+                    username: '游客',
+                    loginType: 'guest',
+                    loginTime: new Date().toISOString()
+                }));
+            }
             
-            // 显示提示
+            document.getElementById('loadingModal').classList.add('hidden');
             alert('欢迎使用！您可以随时在"我的"页面完善个人信息');
-            
-            // 跳转到首页
             window.location.href = 'index.html';
         }
 
