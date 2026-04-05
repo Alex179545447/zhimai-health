@@ -65,6 +65,7 @@
             <p class="text-sm font-bold text-gray-600">
                 <i class="fas fa-star text-yellow-500 mr-1"></i>常用药品
             </p>
+
         </div>
         <div id="commonMedsQuick" class="flex space-x-2 overflow-x-auto pb-1">
             <!-- 动态生成 -->
@@ -141,6 +142,7 @@
                     <input type="file" id="ocrInput" accept="image/*" capture="environment" class="hidden" onchange="processOCR(this)">
                 </div>
 
+
                 <!-- 规格：数量+单位 -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -163,8 +165,10 @@
                             <option value="贴">贴</option>
                             <option value="喷">喷</option>
                         </select>
+
                     </div>
                 </div>
+
 
                 <!-- 服用时间 -->
                 <div>
@@ -182,6 +186,7 @@
                     </div>
                 </div>
 
+
                 <!-- 饭前/饭后 -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">服用条件</label>
@@ -198,6 +203,7 @@
                     </div>
                 </div>
 
+
                 <!-- 服药频次 -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">服药频次 *</label>
@@ -212,12 +218,14 @@
                             <option value="every4weeks">每4周</option>
                             <option value="custom">自定义</option>
                         </select>
+
                         <div id="customFreqContainer" class="hidden">
                             <input type="text" id="customFreq" placeholder="如：每5天" 
                                    class="w-full px-4 py-3 text-lg border-2 border-primary-orange rounded-xl focus:border-primary-blue focus:outline-none">
                         </div>
                     </div>
                 </div>
+
 
                 <!-- 开始日期 -->
                 <div id="startDateContainer" class="hidden">
@@ -228,12 +236,35 @@
                     </p>
                 </div>
 
+                <!-- 每周几（用于每周频次） -->
+                <div id="weekdayContainer" class="hidden">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">选择周几服用</label>
+                    <div class="grid grid-cols-7 gap-1">
+                        <button type="button" onclick="selectWeekday(0)" id="weekday0" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">日</button>
+                        <button type="button" onclick="selectWeekday(1)" id="weekday1" class="py-3 bg-primary-blue text-white rounded-xl font-bold text-sm">一</button>
+                        <button type="button" onclick="selectWeekday(2)" id="weekday2" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">二</button>
+                        <button type="button" onclick="selectWeekday(3)" id="weekday3" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">三</button>
+                        <button type="button" onclick="selectWeekday(4)" id="weekday4" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">四</button>
+                        <button type="button" onclick="selectWeekday(5)" id="weekday5" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">五</button>
+                        <button type="button" onclick="selectWeekday(6)" id="weekday6" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">六</button>
+                    </div>
+                </div>
+
+                <!-- 每月几号 -->
+                <div id="monthdayContainer" class="hidden">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">选择每月几号服用</label>
+                    <input type="number" id="monthday" min="1" max="31" value="1" 
+                           class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none text-center">
+                    <p class="text-xs text-gray-400 mt-1">建议设置为1-28，避免月份天数不一致的问题</p>
+                </div>
+
                 <!-- 备注 -->
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-2">备注（可选）</label>
                     <input type="text" id="medNote" placeholder="如：遵医嘱服用" 
                            class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                 </div>
+
 
                 <button onclick="addMedicine()" id="addBtn" class="w-full py-4 bg-primary-blue text-white text-lg font-bold rounded-xl active:scale-95">
                     <i class="fas fa-plus mr-2"></i>添加药品
@@ -242,6 +273,7 @@
         </div>
     </div>
 
+
     <!-- OCR识别中 -->
     <div id="ocrLoading" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
         <div class="bg-white rounded-2xl p-6 text-center">
@@ -249,6 +281,7 @@
             <p class="text-lg font-medium">正在识别药品名称...</p>
         </div>
     </div>
+
 
     <!-- 底部导航 -->
     <nav class="fixed bottom-0 left-0 right-0 bg-card-white border-t border-gray-200 px-2 py-2 z-40">
@@ -276,10 +309,13 @@
         </div>
     </nav>
 
+
     <script>
         let selectedTimes = ['morning']; // 支持多选
         let selectedCondition = 'after';
         let selectedFrequency = 'daily';
+        let selectedWeekday = 1; // 默认周一
+        let selectedMonthday = 1; // 默认每月1号
         let currentFilter = 'all';
         let medicines = JSON.parse(localStorage.getItem('medicines')) || [];
 
@@ -330,6 +366,7 @@
                                 <p class="text-xs mt-1">您对以下药物过敏：<strong>${allergyList.join('、')}</strong></p>
                                 <p class="text-xs mt-1 text-red-600">服药时请注意药物相互作用，如有不适请及时就医！</p>
                             </div>
+
                         </div>
                     `;
                     container.parentElement.insertBefore(allergyDiv, container.nextSibling);
@@ -337,9 +374,106 @@
             }
         }
 
+        // 获取北京时间
+        function getBeijingTime() {
+            return new Date(new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
+        }
+
+        // 判断某药品今天是否应该显示
+        function shouldShowToday(med) {
+            // 北京时间
+            const today = getBeijingTime();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            // 一次服用药品：只在创建日期显示
+            if (med.frequency === 'once') {
+                return med.createdAt && med.createdAt.split('T')[0] === todayStr;
+            }
+            
+            // 获取开始日期
+            const startDateStr = med.startDate || todayStr;
+            const startDate = new Date(startDateStr + 'T00:00:00+08:00');
+            
+            // 计算从开始日期到今天的天数
+            const daysDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            
+            const freq = med.frequency;
+            
+            // 每天：每天都显示
+            if (freq === 'daily') {
+                return true;
+            }
+            
+            // 隔天：根据间隔天数判断
+            if (freq === 'every2days') {
+                return daysDiff >= 0 && daysDiff % 2 === 0;
+            }
+            
+            // 每周：根据设置的周几判断
+            if (freq === 'weekly') {
+                // 检查是否设置了具体周几
+                if (med.weekday !== undefined && med.weekday !== null) {
+                    const todayWeekday = today.getDay(); // 0=周日, 1=周一...
+                    // 如果今天不是设置的周几，不显示
+                    if (todayWeekday !== med.weekday) {
+                        return false;
+                    }
+                }
+                // 判断是否在服药周期内（从开始日期算起，每7天一个周期）
+                return daysDiff >= 0 && daysDiff % 7 === 0;
+            }
+            
+            // 每2周
+            if (freq === 'every2weeks') {
+                if (med.weekday !== undefined && med.weekday !== null) {
+                    const todayWeekday = today.getDay();
+                    if (todayWeekday !== med.weekday) {
+                        return false;
+                    }
+                }
+                return daysDiff >= 0 && daysDiff % 14 === 0;
+            }
+            
+            // 每3周
+            if (freq === 'every3weeks') {
+                if (med.weekday !== undefined && med.weekday !== null) {
+                    const todayWeekday = today.getDay();
+                    if (todayWeekday !== med.weekday) {
+                        return false;
+                    }
+                }
+                return daysDiff >= 0 && daysDiff % 21 === 0;
+            }
+            
+            // 每4周
+            if (freq === 'every4weeks') {
+                if (med.weekday !== undefined && med.weekday !== null) {
+                    const todayWeekday = today.getDay();
+                    if (todayWeekday !== med.weekday) {
+                        return false;
+                    }
+                }
+                return daysDiff >= 0 && daysDiff % 28 === 0;
+            }
+            
+            // 自定义：尝试解析customFreqText中的天数
+            if (freq === 'custom' && med.customFreqText) {
+                const match = med.customFreqText.match(/(\d+)/);
+                if (match) {
+                    const interval = parseInt(match[1]);
+                    return daysDiff >= 0 && daysDiff % interval === 0;
+                }
+            }
+            
+            // 默认：每天都显示
+            return true;
+        }
+
         // 根据当前时间显示提醒
         function renderCurrentPeriodAlert() {
-            const hour = new Date().getHours();
+            // 使用北京时间
+            const beijingTime = getBeijingTime();
+            const hour = beijingTime.getHours();
             let period = '';
             let periodText = '';
             let icon = '';
@@ -358,7 +492,8 @@
                 icon = 'fa-moon';
             }
 
-            const periodMeds = medicines.filter(m => m.frequency !== 'once' && m.time === period);
+            // 只显示今天应该服用的药品
+            const periodMeds = medicines.filter(m => shouldShowToday(m) && m.time === period);
             const pendingMeds = periodMeds.filter(m => !m.taken);
             
             const container = document.getElementById('currentPeriodAlert');
@@ -371,10 +506,12 @@
                                 <p class="font-bold">现在是${periodText}</p>
                                 <p class="text-sm opacity-80">暂无${periodText}服药提醒</p>
                             </div>
+
                         </div>
                     </div>
                 `;
             } else {
+
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
@@ -383,6 +520,7 @@
                                 <p class="font-bold">现在是${periodText}</p>
                                 <p class="text-sm opacity-80">${pendingMeds.length > 0 ? `还有 ${pendingMeds.length} 项待服用` : '已完成'+periodText+'服药'}</p>
                             </div>
+
                         </div>
                         ${pendingMeds.length > 0 ? `<button onclick="markPeriodTaken('${period}')" class="px-4 py-2 bg-white text-primary-orange rounded-xl font-bold text-sm">
                             <i class="fas fa-check mr-1"></i>一键服用
@@ -395,7 +533,8 @@
         // 一键服用当前时段药品
         function markPeriodTaken(period) {
             medicines.forEach(m => {
-                if (m.time === period && m.frequency !== 'once') {
+                // 只标记今天应该显示的药品
+                if (shouldShowToday(m) && m.time === period && m.frequency !== 'once') {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
                 }
@@ -408,24 +547,33 @@
 
         function renderMedicines() {
             const container = document.getElementById('medicineList');
-            const allMeds = medicines.filter(m => currentFilter === 'all' || (m.time && m.time.includes(currentFilter)));
-            const taken = medicines.filter(m => !m.frequency || m.frequency !== 'once' ? !m.taken : false).length;
-            const total = medicines.filter(m => !m.frequency || m.frequency !== 'once').length;
+            // 只显示今天应该服用的药品
+            const allMeds = medicines.filter(m => {
+                const timeMatch = currentFilter === 'all' || (m.time && m.time.includes(currentFilter));
+                return timeMatch && shouldShowToday(m);
+            });
             
-            document.getElementById('progress').textContent = `${total - taken}/${total}`;
-            const percent = total > 0 ? ((total - taken) / total * 100) : 0;
+            // 只统计今天应该服用的药品
+            const todayMeds = medicines.filter(m => shouldShowToday(m) && m.frequency !== 'once');
+            const taken = todayMeds.filter(m => m.taken).length;
+            const total = todayMeds.length;
+            
+            document.getElementById('progress').textContent = `${taken}/${total}`;
+            const percent = total > 0 ? (taken / total * 100) : 0;
             document.getElementById('progressBar').style.width = percent + '%';
 
             if (allMeds.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-12 text-gray-500">
                         <i class="fas fa-pills text-5xl text-gray-300 mb-3"></i>
-                        <p class="text-lg">暂无药品</p>
+                        <p class="text-lg">今日暂无待服药品</p>
                         <p class="text-sm">点击右上角+添加药品</p>
                     </div>
+
                 `;
                 return;
             }
+
 
             container.innerHTML = allMeds.map((m, i) => {
                 const idx = medicines.indexOf(m);
@@ -434,7 +582,7 @@
                 const timeText = times.map(t => ({ morning: '早', noon: '午', evening: '晚' }[t] || '')).join('·');
                 const timeIcon = { morning: 'fa-sun text-yellow-500', noon: 'fa-cloud-sun text-orange-400', evening: 'fa-moon text-blue-400' }[times[0]] || 'fa-sun';
                 const condText = { before: '饭前', after: '饭后', '不限': '不限' }[m.condition] || '饭后';
-                const freqMap = { once: '一次', daily: '每天', every2days: '隔天', weekly: '每周', every2weeks: '隔周', every3weeks: '每3周', every4weeks: '每4周', custom: m.customFreqText || '自定义' };
+                const freqMap = { once: '一次', daily: '每天', every2days: '隔天', weekly: '每周', every2weeks: '每2周', every3weeks: '每3周', every4weeks: '每4周', custom: m.customFreqText || '自定义' };
                 const freqText = freqMap[m.frequency] || '每天';
                 
                 const canTake = m.frequency !== 'once';
@@ -446,12 +594,15 @@
                                 <div class="w-12 h-12 ${m.taken ? 'bg-green-100' : 'bg-blue-50'} rounded-full flex items-center justify-center">
                                     <i class="fas ${m.taken ? 'fa-check text-green-500' : 'fa-pills text-primary-blue'} text-xl"></i>
                                 </div>
+
                                 <div>
                                     <p class="text-lg font-bold ${m.taken ? 'line-through text-gray-400' : 'text-gray-800'}">${m.name}</p>
-                                    <p class="text-sm text-gray-500">
+                                    <p class="text-sm text-gray-500"> 
                                         <i class="fas ${timeIcon} mr-1"></i>${timeText} · ${m.qty || 1}${m.unit || '片'}
                                     </p>
+
                                 </div>
+
                             </div>
                             ${canTake ? `
                                 <button onclick="toggleTaken(${idx})" 
@@ -460,6 +611,7 @@
                                 </button>
                             ` : '<span class="px-3 py-1 bg-gray-100 text-gray-500 rounded text-sm">一次</span>'}
                         </div>
+
                         <div class="flex items-center space-x-2 text-sm text-gray-500">
                             <span class="px-2 py-1 bg-orange-50 text-orange-600 rounded">${condText}</span>
                             <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded">${freqText}</span>
@@ -469,9 +621,11 @@
                             <button onclick="editMedicine(${idx})" class="flex-1 py-2 text-blue-500 text-sm rounded-lg bg-blue-50">
                                 <i class="fas fa-edit mr-1"></i>修改
                             </button>
+
                             <button onclick="deleteMedicine(${idx})" class="flex-1 py-2 text-red-500 text-sm rounded-lg bg-red-50">
                                 <i class="fas fa-trash mr-1"></i>删除
                             </button>
+
                         </div>
                     </div>
                 `;
@@ -479,6 +633,7 @@
 
             localStorage.setItem('medicines', JSON.stringify(medicines));
         }
+
 
         function filterByPeriod(period) {
             currentFilter = period;
@@ -517,7 +672,8 @@
 
         function markAllTaken() {
             medicines.forEach(m => {
-                if (m.frequency !== 'once') {
+                // 只标记今天应该显示的药品
+                if (shouldShowToday(m) && m.frequency !== 'once') {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
                 }
@@ -586,6 +742,16 @@
             selectedCondition = med.condition || 'after';
             selectCondition(selectedCondition);
             
+            // 设置周几
+            if (med.weekday !== undefined && med.weekday !== null) {
+                selectWeekday(med.weekday);
+            } else {
+                selectWeekday(1); // 默认周一
+            }
+            
+            // 设置每月几号
+            document.getElementById('monthday').value = med.monthday || 1;
+            
             // 显示模态框
             document.getElementById('modalTitle').textContent = '修改药品';
             document.getElementById('addBtn').innerHTML = '<i class="fas fa-check mr-2"></i>更新药品';
@@ -606,10 +772,12 @@
             document.getElementById('medNote').value = '';
             document.getElementById('customFreq').value = '';
             document.getElementById('startDate').value = '';
+            document.getElementById('monthday').value = '1';
             selectedTimes = ['morning'];
             updateTimeButtons();
             selectedCondition = 'after';
             selectCondition('after');
+            selectWeekday(1); // 重置为周一
             editingIndex = -1;
         }
 
@@ -651,7 +819,20 @@
             });
         }
 
+        function selectWeekday(day) {
+            selectedWeekday = day;
+            for (let i = 0; i <= 6; i++) {
+                const btn = document.getElementById('weekday' + i);
+                if (i === day) {
+                    btn.className = 'py-3 bg-primary-blue text-white rounded-xl font-bold text-sm';
+                } else {
+                    btn.className = 'py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm';
+                }
+            }
+        }
+
         function onFrequencyChange() {
+
             const select = document.getElementById('freqSelect');
             const customContainer = document.getElementById('customFreqContainer');
             const startDateContainer = document.getElementById('startDateContainer');
@@ -666,6 +847,9 @@
             
             // 每周及以上频次显示开始日期选择
             const needsStartDate = ['weekly', 'every2weeks', 'every3weeks', 'every4weeks', 'custom'].includes(select.value);
+            const weekdayContainer = document.getElementById('weekdayContainer');
+            const monthdayContainer = document.getElementById('monthdayContainer');
+            
             if (needsStartDate) {
                 startDateContainer.classList.remove('hidden');
                 // 默认设置为今天
@@ -673,8 +857,12 @@
                     const today = new Date().toISOString().split('T')[0];
                     document.getElementById('startDate').value = today;
                 }
+                // 每周频次显示周几选择
+                weekdayContainer.classList.remove('hidden');
             } else {
                 startDateContainer.classList.add('hidden');
+                weekdayContainer.classList.add('hidden');
+                monthdayContainer.classList.add('hidden');
             }
         }
 
@@ -712,16 +900,19 @@
                 
                 let medicineName = '';
                 if (lines.length > 0) {
+
                     // 取第一个包含中文的行
                     medicineName = lines[0].trim();
                 } else if (text.trim()) {
                     // 如果没有中文行，取第一行
                     medicineName = text.split('\n')[0].trim().substring(0, 30);
+
                 }
                 
                 if (medicineName) {
                     document.getElementById('medName').value = medicineName;
                     alert('已识别到：' + medicineName);
+
                 } else {
                     alert('未能识别到药品名称，请手动输入');
                 }
@@ -739,6 +930,8 @@
             const unit = document.getElementById('medUnit').value;
             const note = document.getElementById('medNote').value.trim();
             const startDate = document.getElementById('startDate').value;
+            const weekday = selectedWeekday;
+            const monthday = parseInt(document.getElementById('monthday').value) || 1;
             
             if (!name) {
                 alert('请输入药品名称');
@@ -765,6 +958,8 @@
                 customFreqText,
                 startDate: startDate || new Date().toISOString().split('T')[0],
                 note,
+                weekday: ['weekly', 'every2weeks', 'every3weeks', 'every4weeks'].includes(frequency) ? weekday : null,
+                monthday: monthday,
                 taken: false,
                 takenTime: null,
                 createdAt: new Date().toISOString()
@@ -792,5 +987,6 @@
             }
         }
     </script>
+
 </body>
 </html>
