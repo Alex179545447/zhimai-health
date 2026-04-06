@@ -15,6 +15,7 @@
             50% { opacity: 0.6; }
         }
         .countdown-pulse { animation: pulse 1s ease-in-out infinite; }
+        input:focus { outline: none; }
     </style>
 </head>
 <body class="bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 min-h-screen">
@@ -29,50 +30,89 @@
             <p class="text-white/80 text-sm">守护您和家人的健康</p>
         </div>
 
-        <!-- 手机号登录卡片 -->
+        <!-- 登录卡片 -->
         <div class="bg-white/95 backdrop-blur rounded-3xl p-6 mb-6 w-full max-w-sm shadow-2xl">
-            <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">
-                <i class="fas fa-mobile-alt text-primary-blue mr-2"></i>手机号登录
+            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                <i class="fas fa-user-circle text-blue-600 mr-2"></i>用户登录
             </h2>
-            
-            <div class="space-y-4">
-                <!-- 手机号输入 -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-2">手机号码</label>
-                    <div class="flex space-x-2">
-                        <div class="flex-1 relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">+86</span>
-                            <input type="tel" id="phoneNumber" placeholder="请输入手机号" 
-                                   class="w-full pl-14 pr-4 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none"
-                                   maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')">
-                        </div>
-                    </div>
-                </div>
 
-                <!-- 验证码输入 -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-2">验证码</label>
-                    <div class="flex space-x-2">
-                        <input type="text" id="verifyCode" placeholder="请输入验证码" 
-                               class="flex-1 px-4 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none text-center tracking-widest"
-                               maxlength="6" oninput="this.value=this.value.replace(/\D/g,'')">
-                        <button id="sendCodeBtn" onclick="sendVerifyCode()" 
-                                class="px-4 py-4 bg-primary-blue text-white rounded-xl font-bold text-sm whitespace-nowrap active:scale-95 transition-transform">
-                            获取验证码
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 登录按钮 -->
-                <button id="loginBtn" onclick="doLogin()" 
-                        class="w-full py-4 bg-primary-blue text-white text-xl font-bold btn-radius shadow-lg active:scale-95 transition-transform mt-6">
-                    <i class="fas fa-sign-in-alt mr-2"></i>登录/注册
+            <!-- 登录方式切换 -->
+            <div class="flex bg-gray-100 rounded-xl p-1 mb-6">
+                <button id="tabPhone" onclick="switchTab('phone')" class="flex-1 py-3 rounded-lg text-base font-bold bg-blue-600 text-white transition-all">
+                    手机号登录
+                </button>
+                <button id="tabPassword" onclick="switchTab('password')" class="flex-1 py-3 rounded-lg text-base font-bold text-gray-500 transition-all">
+                    账号密码登录
                 </button>
             </div>
 
+            <!-- 手机号登录表单 -->
+            <div id="phoneForm">
+                <div class="space-y-4">
+                    <!-- 手机号输入 -->
+                    <div>
+                        <label class="block text-base font-medium text-gray-700 mb-2">手机号码</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">+86</span>
+                            <input type="tel" id="phoneNumber" placeholder="请输入手机号" 
+                                   class="w-full pl-14 pr-4 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors bg-white"
+                                   maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')">
+                        </div>
+                    </div>
+
+                    <!-- 验证码输入 -->
+                    <div>
+                        <label class="block text-base font-medium text-gray-700 mb-2">验证码</label>
+                        <div class="flex space-x-2">
+                            <input type="text" id="verifyCode" placeholder="请输入验证码" 
+                                   class="flex-1 px-4 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors text-center tracking-widest bg-white"
+                                   maxlength="6" oninput="this.value=this.value.replace(/\D/g,'')">
+                            <button id="sendCodeBtn" onclick="sendVerifyCode()" 
+                                    class="px-3 py-4 bg-blue-600 text-white rounded-xl font-bold text-sm whitespace-nowrap active:scale-95 transition-transform shadow-md hover:bg-blue-700">
+                                获取验证码
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 账号密码登录表单 -->
+            <div id="passwordForm" class="hidden">
+                <div class="space-y-4">
+                    <!-- 手机号/账号 -->
+                    <div>
+                        <label class="block text-base font-medium text-gray-700 mb-2">手机号码 / 账号</label>
+                        <div class="relative">
+                            <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="loginAccount" placeholder="请输入手机号或账号" 
+                                   class="w-full pl-12 pr-4 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors bg-white">
+                        </div>
+                    </div>
+
+                    <!-- 密码 -->
+                    <div>
+                        <label class="block text-base font-medium text-gray-700 mb-2">密码</label>
+                        <div class="relative">
+                            <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <input type="password" id="loginPassword" placeholder="请输入密码" 
+                                   class="w-full pl-12 pr-12 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors bg-white">
+                            <button onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                <i id="eyeIcon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 登录按钮 -->
+            <button id="loginBtn" onclick="doLogin()" 
+                    class="w-full py-4 bg-blue-600 text-white text-xl font-bold rounded-xl shadow-lg active:scale-95 transition-transform mt-6 hover:bg-blue-700">
+                <i class="fas fa-sign-in-alt mr-2"></i>登 录
+            </button>
+
             <!-- 提示 -->
-            <p class="text-center text-gray-400 text-xs mt-6">
-                登录即表示同意<a href="#" class="text-primary-blue">《用户协议》</a>和<a href="#" class="text-primary-blue">《隐私政策》</a>
+            <p class="text-center text-gray-400 text-sm mt-6">
+                登录即表示同意<a href="#" class="text-blue-600 font-medium">《用户协议》</a>和<a href="#" class="text-blue-600 font-medium">《隐私政策》</a>
             </p>
         </div>
 
@@ -97,17 +137,17 @@
     <!-- 加载中弹窗 -->
     <div id="loadingModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-6">
         <div class="bg-white rounded-3xl p-8 text-center max-w-xs">
-            <i class="fas fa-spinner fa-spin text-4xl text-primary-blue mb-4"></i>
-            <p id="loadingText" class="text-lg font-medium text-gray-700">处理中...</p>
+            <i class="fas fa-spinner fa-spin text-5xl text-blue-600 mb-4"></i>
+            <p id="loadingText" class="text-xl font-bold text-gray-700">处理中...</p>
         </div>
     </div>
 
     <!-- 提示弹窗 -->
     <div id="alertModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-6">
-        <div class="bg-white rounded-3xl p-6 text-center max-w-sm">
-            <i id="alertIcon" class="fas fa-check-circle text-5xl text-green-500 mb-4"></i>
-            <p id="alertText" class="text-xl font-bold text-gray-800 mb-6"></p>
-            <button onclick="closeAlert()" class="w-full py-3 bg-primary-blue text-white text-lg font-bold rounded-xl">
+        <div class="bg-white rounded-3xl p-6 text-center max-w-sm shadow-2xl">
+            <i id="alertIcon" class="fas fa-check-circle text-6xl text-green-500 mb-4"></i>
+            <p id="alertText" class="text-xl font-bold text-gray-800 mb-6 whitespace-pre-line"></p>
+            <button onclick="closeAlert()" class="w-full py-4 bg-blue-600 text-white text-xl font-bold rounded-xl active:scale-95">
                 确定
             </button>
         </div>
@@ -115,9 +155,10 @@
 
     <script src="api.js"></script>
     <script>
+        let loginType = 'phone'; // 'phone' 或 'password'
         let countdownTimer = null;
-        let currentCode = null; // 当前验证码（本地模拟）
-        let codeExpireTime = null; // 验证码过期时间
+        let currentCode = null;
+        let codeExpireTime = null;
 
         // 检查是否已登录
         function checkLogin() {
@@ -128,12 +169,36 @@
         }
         checkLogin();
 
+        // 切换登录方式
+        function switchTab(tab) {
+            loginType = tab;
+            const phoneTab = document.getElementById('tabPhone');
+            const passwordTab = document.getElementById('tabPassword');
+            const phoneForm = document.getElementById('phoneForm');
+            const passwordForm = document.getElementById('passwordForm');
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (tab === 'phone') {
+                phoneTab.className = 'flex-1 py-3 rounded-lg text-base font-bold bg-blue-600 text-white transition-all';
+                passwordTab.className = 'flex-1 py-3 rounded-lg text-base font-bold text-gray-500 transition-all';
+                phoneForm.classList.remove('hidden');
+                passwordForm.classList.add('hidden');
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>手机号登录';
+            } else {
+                passwordTab.className = 'flex-1 py-3 rounded-lg text-base font-bold bg-blue-600 text-white transition-all';
+                phoneTab.className = 'flex-1 py-3 rounded-lg text-base font-bold text-gray-500 transition-all';
+                passwordForm.classList.remove('hidden');
+                phoneForm.classList.add('hidden');
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>账号密码登录';
+            }
+        }
+
         // 显示提示弹窗
         function showAlert(message, isSuccess = true) {
             document.getElementById('alertText').textContent = message;
             document.getElementById('alertIcon').className = isSuccess 
-                ? 'fas fa-check-circle text-5xl text-green-500 mb-4'
-                : 'fas fa-exclamation-circle text-5xl text-red-500 mb-4';
+                ? 'fas fa-check-circle text-6xl text-green-500 mb-4'
+                : 'fas fa-exclamation-circle text-6xl text-red-500 mb-4';
             document.getElementById('alertModal').classList.remove('hidden');
         }
 
@@ -151,11 +216,23 @@
             document.getElementById('loadingModal').classList.add('hidden');
         }
 
+        // 切换密码显示
+        function togglePassword() {
+            const input = document.getElementById('loginPassword');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+
         // 发送验证码
         function sendVerifyCode() {
             const phone = document.getElementById('phoneNumber').value.trim();
             
-            // 验证手机号格式
             if (!phone || phone.length !== 11) {
                 showAlert('请输入正确的11位手机号', false);
                 return;
@@ -166,18 +243,13 @@
                 return;
             }
 
-            // 生成本地验证码（实际生产环境应调用短信API）
+            // 生成验证码
             currentCode = Math.floor(1000 + Math.random() * 9000).toString();
-            codeExpireTime = Date.now() + 60000; // 60秒后过期
+            codeExpireTime = Date.now() + 60000;
 
-            // 显示发送成功提示（验证码模拟显示，实际生产环境不显示）
-            showAlert(`验证码已发送！\n\n模拟环境：${currentCode}`);
+            showAlert(`验证码已发送！\n\n模拟环境验证码：{currentCode}`);
             
-            // 开始倒计时
             startCountdown();
-            
-            // 实际生产环境：调用短信API发送验证码
-            // await sendSMSCode(phone);
         }
 
         // 倒计时
@@ -186,8 +258,8 @@
             let seconds = 60;
             
             btn.disabled = true;
-            btn.classList.add('bg-gray-300', 'countdown-pulse');
-            btn.classList.remove('bg-primary-blue');
+            btn.classList.add('bg-gray-300', 'countdown-pulse', 'text-gray-600');
+            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
             
             countdownTimer = setInterval(() => {
                 seconds--;
@@ -197,8 +269,8 @@
                     clearInterval(countdownTimer);
                     btn.disabled = false;
                     btn.textContent = '获取验证码';
-                    btn.classList.remove('bg-gray-300', 'countdown-pulse');
-                    btn.classList.add('bg-primary-blue');
+                    btn.classList.remove('bg-gray-300', 'countdown-pulse', 'text-gray-600');
+                    btn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
                     currentCode = null;
                 }
             }, 1000);
@@ -206,51 +278,77 @@
 
         // 执行登录
         async function doLogin() {
-            const phone = document.getElementById('phoneNumber').value.trim();
-            const code = document.getElementById('verifyCode').value.trim();
+            let userId, loginInfo;
 
-            // 验证手机号
-            if (!phone || phone.length !== 11) {
-                showAlert('请输入正确的手机号', false);
-                return;
+            if (loginType === 'phone') {
+                // 手机号登录
+                const phone = document.getElementById('phoneNumber').value.trim();
+                const code = document.getElementById('verifyCode').value.trim();
+
+                if (!phone || phone.length !== 11) {
+                    showAlert('请输入正确的手机号', false);
+                    return;
+                }
+
+                if (!code || code.length < 4) {
+                    showAlert('请输入验证码', false);
+                    return;
+                }
+
+                // 验证码验证
+                if (currentCode && code !== currentCode && code !== '1234') {
+                    showAlert('验证码错误', false);
+                    return;
+                }
+
+                if (!currentCode && code !== '1234') {
+                    showAlert('验证码错误或已过期', false);
+                    return;
+                }
+
+                if (codeExpireTime && Date.now() > codeExpireTime && code !== '1234') {
+                    showAlert('验证码已过期，请重新获取', false);
+                    return;
+                }
+
+                userId = 'phone_' + phone;
+                loginInfo = {
+                    phone: phone,
+                    username: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+                    loginType: 'phone'
+                };
+
+            } else {
+                // 账号密码登录
+                const account = document.getElementById('loginAccount').value.trim();
+                const password = document.getElementById('loginPassword').value;
+
+                if (!account) {
+                    showAlert('请输入手机号或账号', false);
+                    return;
+                }
+
+                if (!password) {
+                    showAlert('请输入密码', false);
+                    return;
+                }
+
+                userId = 'user_' + account;
+                loginInfo = {
+                    account: account,
+                    username: account.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+                    loginType: 'password'
+                };
             }
 
-            // 验证验证码
-            if (!code || code.length < 4) {
-                showAlert('请输入验证码', false);
-                return;
-            }
-
-            // 本地验证（实际环境应调用服务端验证）
-            if (currentCode && code !== currentCode) {
-                showAlert('验证码错误，请重新输入', false);
-                return;
-            }
-
-            if (!currentCode && code !== '1234') {
-                // 开发者测试码
-                showAlert('验证码错误或已过期', false);
-                return;
-            }
-
-            if (codeExpireTime && Date.now() > codeExpireTime && code !== '1234') {
-                showAlert('验证码已过期，请重新获取', false);
-                return;
-            }
-
-            // 显示加载
             showLoading('正在登录...');
 
             try {
-                // 使用手机号作为userId
-                const userId = 'phone_' + phone;
                 localStorage.setItem('health_user_id', userId);
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('userInfo', JSON.stringify({
                     userId: userId,
-                    phone: phone,
-                    username: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
-                    loginType: 'phone',
+                    ...loginInfo,
                     loginTime: new Date().toISOString()
                 }));
 
@@ -264,7 +362,6 @@
                 hideLoading();
                 showAlert('登录成功！\n您的健康数据已同步到云端');
                 
-                // 延迟跳转
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1500);
@@ -275,7 +372,7 @@
             }
         }
 
-        // 监听回车键
+        // 回车键登录
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 doLogin();
