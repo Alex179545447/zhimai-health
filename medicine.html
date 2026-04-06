@@ -321,7 +321,7 @@
         let selectedMonthday = 1; // 默认每月1号
         let currentFilter = 'all';
         let medicines = JSON.parse(localStorage.getItem('medicines')) || [];
-        let commonMedicines = JSON.parse(localStorage.getItem('commonMedicines')) || [];
+        let commonMedicines = JSON.parse(localStorage.getItem('commonMeds') || '[]');
 
         // 大字体提示弹窗
         function showBigAlert(message) {
@@ -1011,7 +1011,7 @@
                 if (commonMedicines.length > 20) {
                     commonMedicines = commonMedicines.slice(0, 20);
                 }
-                localStorage.setItem('commonMedicines', JSON.stringify(commonMedicines));
+                localStorage.setItem('commonMeds', JSON.stringify(commonMedicines));
             }
         }
         
