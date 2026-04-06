@@ -205,9 +205,45 @@
         // 获取当前时段
         function getCurrentPeriod() {
             const hour = new Date().getHours();
-            if (hour >= 5 && hour < 12) return { key: 'morning', text: '早间', icon: 'fa-sun' };
-            if (hour >= 12 && hour < 18) return { key: 'noon', text: '午间', icon: 'fa-cloud-sun' };
+            if (hour >= 5 && hour < 11) return { key: 'morning', text: '早间', icon: 'fa-sun' };
+            if (hour >= 11 && hour < 17) return { key: 'noon', text: '午间', icon: 'fa-cloud-sun' };
             return { key: 'evening', text: '晚间', icon: 'fa-moon' };
+        }
+
+        // 获取北京时间
+        function getBeijingTime() {
+            return new Date(new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
+        }
+
+        // 判断某药品今天是否应该显示
+        function shouldShowToday(med) {
+            const today = getBeijingTime();
+            const todayStr = today.toISOString().split('T')[0];
+            
+            // 一次服用药品
+            if (med.frequency === 'once') {
+                return med.createdAt && med.createdAt.split('T')[0] === todayStr;
+            }
+            
+            // 获取开始日期
+            const startDateStr = med.startDate || todayStr;
+            const startDate = new Date(startDateStr + 'T00:00:00+08:00');
+            const daysDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            
+            const freq = med.frequency;
+            
+            if (freq === 'daily') return true;
+            if (freq === 'every2days') return daysDiff >= 0 && daysDiff % 2 === 0;
+            if (freq === 'weekly' || freq === 'every2weeks' || freq === 'every3weeks' || freq === 'every4weeks') {
+                const interval = { weekly: 7, every2weeks: 14, every3weeks: 21, every4weeks: 28 }[freq];
+                return daysDiff >= 0 && daysDiff % interval === 0;
+            }
+            if (freq === 'custom' && med.customFreqText) {
+                const match = med.customFreqText.match(/(\d+)/);
+                if (match) return daysDiff >= 0 && daysDiff % parseInt(match[1]) === 0;
+            }
+            
+            return true;
         }
 
 
@@ -216,11 +252,12 @@
             const period = getCurrentPeriod();
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
             
-            // 只获取当前时段且未服用的药品
+            // 只获取当前时段、今天应显示、且未服用的药品
             const pending = medicines.filter(m => 
                 m.time === period.key && 
                 !m.taken && 
-                m.frequency !== 'once'
+                m.frequency !== 'once' &&
+                shouldShowToday(m)
             );
             
             const container = document.getElementById('periodAlert');
@@ -263,13 +300,14 @@
         function takePeriodMedicine(period) {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
             medicines.forEach(m => {
-                if (m.time === period && !m.taken && m.frequency !== 'once') {
+                if (m.time === period && !m.taken && m.frequency !== 'once' && shouldShowToday(m)) {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
                 }
             });
             localStorage.setItem('medicines', JSON.stringify(medicines));
             renderPeriodAlert();
+            renderPendingMeds();
             updateStats();
             showBigAlert('已记录服药！');
         }
@@ -280,7 +318,7 @@
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
             let count = 0;
             medicines.forEach(m => {
-                if (!m.taken && m.frequency !== 'once') {
+                if (!m.taken && m.frequency !== 'once' && shouldShowToday(m)) {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
                     count++;
@@ -301,7 +339,8 @@
         // 渲染待服药列表
         function renderPendingMeds() {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
-            const pending = medicines.filter(m => !m.taken && m.frequency !== 'once');
+            // 过滤：未服用、非一次、今天应显示
+            const pending = medicines.filter(m => !m.taken && m.frequency !== 'once' && shouldShowToday(m));
             
             document.getElementById('pendingCount').textContent = `${pending.length}项`;
             
