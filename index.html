@@ -196,12 +196,20 @@
         }
 
 
-        // 获取当前时段
+        // 获取当前时段（北京时间）
         function getCurrentPeriod() {
-            const hour = new Date().getHours();
+            const beijingTime = getBeijingTime();
+            const hour = beijingTime.getHours();
             if (hour >= 5 && hour < 11) return { key: 'morning', text: '早间', icon: 'fa-sun' };
             if (hour >= 11 && hour < 17) return { key: 'noon', text: '午间', icon: 'fa-cloud-sun' };
             return { key: 'evening', text: '晚间', icon: 'fa-moon' };
+        }
+
+        // 判断药品时段是否匹配（支持多选时段）
+        function timeMatches(medTime, period) {
+            if (!medTime) return false;
+            const timeStr = Array.isArray(medTime) ? medTime.join(',') : medTime;
+            return timeStr.split(',').includes(period);
         }
 
         // 获取北京时间
@@ -246,9 +254,9 @@
             const period = getCurrentPeriod();
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
             
-            // 只获取当前时段、今天应显示、且未服用的药品
+            // 只获取当前时段、今天应显示、且未服用的药品（使用timeMatches支持多选时段）
             const pending = medicines.filter(m => 
-                m.time === period.key && 
+                timeMatches(m.time, period.key) && 
                 !m.taken && 
                 m.frequency !== 'once' &&
                 shouldShowToday(m)
@@ -294,7 +302,7 @@
         function takePeriodMedicine(period) {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
             medicines.forEach(m => {
-                if (m.time === period && !m.taken && m.frequency !== 'once' && shouldShowToday(m)) {
+                if (timeMatches(m.time, period) && !m.taken && m.frequency !== 'once' && shouldShowToday(m)) {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
                 }
@@ -352,9 +360,11 @@
 
 
             container.innerHTML = pending.map(m => {
-                const timeText = { morning: '早', noon: '午', evening: '晚' }[m.time] || '早';
+                // 处理多选时段
+                const times = m.time ? (Array.isArray(m.time) ? m.time : m.time.split(',')) : ['morning'];
+                const timeText = times.map(t => ({ morning: '早', noon: '午', evening: '晚' }[t] || '')).join('·');
                 const condText = { before: '饭前', after: '饭后', fasting: '空腹' }[m.condition] || '饭后';
-                const timeIcon = { morning: 'fa-sun text-yellow-500', noon: 'fa-cloud-sun text-orange-400', evening: 'fa-moon text-blue-400' }[m.time] || 'fa-sun';
+                const timeIcon = { morning: 'fa-sun text-yellow-500', noon: 'fa-cloud-sun text-orange-400', evening: 'fa-moon text-blue-400' }[times[0]] || 'fa-sun';
                 
                 return `
                     <div class="flex items-center justify-between py-2 bg-orange-50 rounded-xl px-3">

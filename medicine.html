@@ -55,11 +55,6 @@
         </div>
     </header>
 
-    <!-- 当前时段提醒 -->
-    <div id="currentPeriodAlert" class="bg-gradient-to-r from-primary-orange to-orange-400 text-white px-4 py-3">
-        <!-- 动态生成 -->
-    </div>
-
     <!-- 常用药品快捷选择 -->
     <div id="commonMedsSection" class="mx-3 mt-3">
         <div class="flex items-center justify-between mb-2">
@@ -342,10 +337,8 @@
                 document.getElementById('medName').value = decodeURIComponent(addMed);
             }
             
-            renderCurrentPeriodAlert();
             renderMedicines();
             renderCommonMedicines();
-            checkAllergyAlert();
         });
 
         // 检查过敏药物提醒
@@ -382,6 +375,15 @@
         // 获取北京时间
         function getBeijingTime() {
             return new Date(new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
+        }
+
+        // 判断药品时段是否匹配（支持多选时段）
+        function timeMatches(medTime, period) {
+            if (!medTime) return false;
+            // 如果是数组，转为字符串
+            const timeStr = Array.isArray(medTime) ? medTime.join(',') : medTime;
+            // 检查是否包含该时段
+            return timeStr.split(',').includes(period);
         }
 
         // 判断某药品今天是否应该显示
@@ -497,8 +499,8 @@
                 icon = 'fa-moon';
             }
 
-            // 只显示今天应该服用的药品
-            const periodMeds = medicines.filter(m => shouldShowToday(m) && m.time === period);
+            // 只显示今天应该服用的药品（使用timeMatches支持多选时段）
+            const periodMeds = medicines.filter(m => shouldShowToday(m) && timeMatches(m.time, period));
             const pendingMeds = periodMeds.filter(m => !m.taken);
             
             const container = document.getElementById('currentPeriodAlert');
@@ -538,16 +540,14 @@
         // 一键服用当前时段药品
         function markPeriodTaken(period) {
             medicines.forEach(m => {
-                // 只标记今天应该显示的药品
-                if (shouldShowToday(m) && m.time === period && m.frequency !== 'once') {
+                // 只标记今天应该显示的药品（使用timeMatches支持多选时段）
+                if (shouldShowToday(m) && timeMatches(m.time, period) && m.frequency !== 'once') {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
                 }
             });
             localStorage.setItem('medicines', JSON.stringify(medicines));
-            renderCurrentPeriodAlert();
             renderMedicines();
-            alert('已记录服药！');
         }
 
         function renderMedicines() {
@@ -658,7 +658,6 @@
             medicines[index].taken = !medicines[index].taken;
             medicines[index].takenTime = medicines[index].taken ? new Date().toISOString() : null;
             localStorage.setItem('medicines', JSON.stringify(medicines));
-            renderCurrentPeriodAlert();
             renderMedicines();
             
             // 如果标记为服用，显示中西药分开提醒
@@ -684,7 +683,6 @@
                 }
             });
             localStorage.setItem('medicines', JSON.stringify(medicines));
-            renderCurrentPeriodAlert();
             renderMedicines();
             showBigAlert('已全部标记为完成！');
         }
@@ -695,7 +693,6 @@
                 m.takenTime = null;
             });
             localStorage.setItem('medicines', JSON.stringify(medicines));
-            renderCurrentPeriodAlert();
             renderMedicines();
         }
 
@@ -713,7 +710,6 @@
                 const idx = parseInt(modal.dataset.deleteIndex);
                 medicines.splice(idx, 1);
                 localStorage.setItem('medicines', JSON.stringify(medicines));
-                renderCurrentPeriodAlert();
                 renderMedicines();
                 closeBigAlert();
                 btn.onclick = closeBigAlert;
@@ -978,7 +974,6 @@
                 medicines[editingIndex] = medicineData;
                 localStorage.setItem('medicines', JSON.stringify(medicines));
                 closeAddModal();
-                renderCurrentPeriodAlert();
                 renderMedicines();
                 alert('药品更新成功！');
             } else {
@@ -990,7 +985,6 @@
                 addToCommonMedicines(name, unit);
                 
                 closeAddModal();
-                renderCurrentPeriodAlert();
                 renderMedicines();
                 renderCommonMedicines();
                 alert('药品添加成功！');

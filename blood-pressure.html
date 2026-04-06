@@ -24,10 +24,11 @@
         }
     </script>
     <style>
-        * { -webkit-tap-highlight-color: transparent; }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .card-radius { border-radius: 16px; }
         .num-btn { width: 60px; height: 60px; font-size: 1.5rem; }
+        .modal-overlay { background: rgba(0,0,0,0.5); }
     </style>
 </head>
 <body class="bg-bg-light min-h-screen pb-24">
@@ -38,6 +39,73 @@
             <button onclick="closeBigAlert()" class="w-full mt-6 py-4 bg-gradient-to-r from-red-500 to-purple-500 text-white text-xl font-bold rounded-2xl active:scale-95">
                 确定
             </button>
+        </div>
+    </div>
+
+    <!-- 编辑血压弹窗 -->
+    <div id="editBPNModal" class="fixed inset-0 z-[100] hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeEditBPM()"></div>
+        <div class="relative bg-white rounded-t-3xl w-full max-w-md mx-auto mt-auto absolute bottom-0 left-0 right-0 p-6 shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">编辑血压记录</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">高压 (收缩压)</label>
+                    <input type="number" id="editSystolic" min="60" max="250" 
+                           class="w-full px-4 py-3 text-xl font-bold text-center border-2 border-primary-red/30 rounded-xl focus:border-primary-red focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">低压 (舒张压)</label>
+                    <input type="number" id="editDiastolic" min="40" max="150" 
+                           class="w-full px-4 py-3 text-xl font-bold text-center border-2 border-primary-blue/30 rounded-xl focus:border-primary-blue focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">心率</label>
+                    <input type="number" id="editHeartRate" min="40" max="200" 
+                           class="w-full px-4 py-3 text-xl font-bold text-center border-2 border-primary-orange/30 rounded-xl focus:border-primary-orange focus:outline-none">
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeEditBPM()" class="flex-1 py-3 bg-gray-200 text-gray-600 text-lg font-bold rounded-xl">
+                    取消
+                </button>
+                <button onclick="saveEditBP()" class="flex-1 py-3 bg-gradient-to-r from-red-500 to-red-400 text-white text-lg font-bold rounded-xl">
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑血糖弹窗 -->
+    <div id="editBSModal" class="fixed inset-0 z-[100] hidden">
+        <div class="modal-overlay absolute inset-0" onclick="closeEditBSM()"></div>
+        <div class="relative bg-white rounded-t-3xl w-full max-w-md mx-auto mt-auto absolute bottom-0 left-0 right-0 p-6 shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">编辑血糖记录</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">测量类型</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="selectEditBSType('fasting')" id="editFastingBtn" class="py-3 bg-primary-purple text-white rounded-xl font-bold">空腹</button>
+                        <button onclick="selectEditBSType('afterMeal')" id="editAfterMealBtn" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-bold">餐后</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">血糖值 (mmol/L)</label>
+                    <input type="number" id="editBsValue" min="1" max="35" step="0.1" 
+                           class="w-full px-4 py-3 text-xl font-bold text-center border-2 border-primary-purple/30 rounded-xl focus:border-primary-purple focus:outline-none">
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeEditBSM()" class="flex-1 py-3 bg-gray-200 text-gray-600 text-lg font-bold rounded-xl">
+                    取消
+                </button>
+                <button onclick="saveEditBS()" class="flex-1 py-3 bg-gradient-to-r from-purple-500 to-purple-400 text-white text-lg font-bold rounded-xl">
+                    保存
+                </button>
+            </div>
         </div>
     </div>
 
@@ -66,6 +134,20 @@
 
     <!-- 血压区域 -->
     <div id="bpSection" class="px-3 py-3">
+        <!-- 每日平均值 -->
+        <div id="bpDailyAvg" class="bg-gradient-to-r from-green-400 to-green-500 text-white rounded-2xl p-4 mb-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90"><i class="fas fa-chart-bar mr-1"></i>今日平均值</p>
+                    <p class="text-2xl font-bold" id="bpAvgValue">--/-- mmHg</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm opacity-90">测量次数</p>
+                    <p class="text-2xl font-bold" id="bpTodayCount">0</p>
+                </div>
+            </div>
+        </div>
+
         <!-- 状态显示 -->
         <div class="bg-gradient-to-b from-red-500 to-red-400 text-white rounded-2xl p-4 text-center mb-3">
             <p class="text-base">当前状态</p>
@@ -124,6 +206,20 @@
 
     <!-- 血糖区域 -->
     <div id="bsSection" class="px-3 py-3 hidden">
+        <!-- 每日平均值 -->
+        <div id="bsDailyAvg" class="bg-gradient-to-r from-purple-400 to-purple-500 text-white rounded-2xl p-4 mb-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm opacity-90"><i class="fas fa-chart-bar mr-1"></i>今日平均值</p>
+                    <p class="text-2xl font-bold" id="bsAvgValue">-- mmol/L</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm opacity-90">测量次数</p>
+                    <p class="text-2xl font-bold" id="bsTodayCount">0</p>
+                </div>
+            </div>
+        </div>
+
         <!-- 状态显示 -->
         <div class="bg-gradient-to-b from-purple-500 to-purple-400 text-white rounded-2xl p-4 text-center mb-3">
             <p class="text-base">当前状态</p>
@@ -245,12 +341,16 @@
 
         let systolic = lastBP ? lastBP.systolic : 120;
         let diastolic = lastBP ? lastBP.diastolic : 80;
-        let heartRate = lastBP ? lastBP.heartRate : 72;
+        let heartRate = lastBP? lastBP.heartRate : 72;
         let bsValue = lastBS ? lastBS.value : 5.6;
         let bsType = lastBS ? lastBS.type : 'fasting';
 
         let bpRecords = JSON.parse(localStorage.getItem('bpRecords')) || [];
         let bsRecords = JSON.parse(localStorage.getItem('bsRecords')) || [];
+
+        // 当前编辑的索引
+        let editBPIdx = -1;
+        let editBSIdx = -1;
 
         // 大字体提示弹窗
         function showBigAlert(message) {
@@ -326,6 +426,17 @@
             updateBSStatus();
         }
 
+        // 编辑血糖弹窗的类型选择
+        function selectEditBSType(type) {
+            if (type === 'fasting') {
+                document.getElementById('editFastingBtn').className = 'py-3 bg-primary-purple text-white rounded-xl font-bold';
+                document.getElementById('editAfterMealBtn').className = 'py-3 bg-gray-100 text-gray-600 rounded-xl font-bold';
+            } else {
+                document.getElementById('editAfterMealBtn').className = 'py-3 bg-primary-purple text-white rounded-xl font-bold';
+                document.getElementById('editFastingBtn').className = 'py-3 bg-gray-100 text-gray-600 rounded-xl font-bold';
+            }
+        }
+
         function getBPStatus() {
             if (systolic < 90 || diastolic < 60) return { status: '偏低', advice: '注意营养' };
             if (systolic > 160 || diastolic > 100) return { status: '高血压', advice: '请就医' };
@@ -358,6 +469,43 @@
             document.getElementById('bsAdvice').textContent = r.advice;
         }
 
+        // 计算每日平均值
+        function getTodayDate() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        }
+
+        function updateBPDailyAvg() {
+            const today = getTodayDate();
+            const todayRecords = bpRecords.filter(r => r.date.startsWith(today));
+            const count = todayRecords.length;
+            
+            document.getElementById('bpTodayCount').textContent = count;
+            
+            if (count > 0) {
+                const avgSys = Math.round(todayRecords.reduce((sum, r) => sum + r.systolic, 0) / count);
+                const avgDia = Math.round(todayRecords.reduce((sum, r) => sum + r.diastolic, 0) / count);
+                document.getElementById('bpAvgValue').textContent = `${avgSys}/${avgDia} mmHg`;
+            } else {
+                document.getElementById('bpAvgValue').textContent = '--/-- mmHg';
+            }
+        }
+
+        function updateBSDailyAvg() {
+            const today = getTodayDate();
+            const todayRecords = bsRecords.filter(r => r.date.startsWith(today));
+            const count = todayRecords.length;
+            
+            document.getElementById('bsTodayCount').textContent = count;
+            
+            if (count > 0) {
+                const avg = (todayRecords.reduce((sum, r) => sum + r.value, 0) / count).toFixed(1);
+                document.getElementById('bsAvgValue').textContent = `${avg} mmol/L`;
+            } else {
+                document.getElementById('bsAvgValue').textContent = '-- mmol/L';
+            }
+        }
+
         function saveBP() {
             const now = new Date();
             const date = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -366,6 +514,7 @@
             if (bpRecords.length > 30) bpRecords.pop();
             localStorage.setItem('bpRecords', JSON.stringify(bpRecords));
             renderBPHistory();
+            updateBPDailyAvg();
             // 显示详细弹窗
             const msg = `血压已记录！\n\n您的血压：${systolic}/${diastolic} mmHg\n心率：${heartRate} bpm\n当前状态：${r.status}\n\n${r.advice}`;
             showBigAlert(msg);
@@ -380,9 +529,113 @@
             if (bsRecords.length > 30) bsRecords.pop();
             localStorage.setItem('bsRecords', JSON.stringify(bsRecords));
             renderBSHistory();
+            updateBSDailyAvg();
             // 显示详细弹窗
             const msg = `血糖已记录！\n\n您的血糖（${typeText}）：${bsValue} mmol/L\n当前状态：${r.status}\n\n${r.advice}`;
             showBigAlert(msg);
+        }
+
+        // 打开编辑血压弹窗
+        function editBP(idx) {
+            editBPIdx = idx;
+            const record = bpRecords[idx];
+            document.getElementById('editSystolic').value = record.systolic;
+            document.getElementById('editDiastolic').value = record.diastolic;
+            document.getElementById('editHeartRate').value = record.heartRate;
+            document.getElementById('editBPNModal').classList.remove('hidden');
+        }
+
+        // 关闭编辑血压弹窗
+        function closeEditBPM() {
+            document.getElementById('editBPNModal').classList.add('hidden');
+            editBPIdx = -1;
+        }
+
+        // 保存编辑血压
+        function saveEditBP() {
+            if (editBPIdx < 0 || editBPIdx >= bpRecords.length) return;
+            
+            const systolic = parseInt(document.getElementById('editSystolic').value) || 120;
+            const diastolic = parseInt(document.getElementById('editDiastolic').value) || 80;
+            const heartRate = parseInt(document.getElementById('editHeartRate').value) || 72;
+            
+            // 计算状态
+            let status = '正常';
+            if (systolic < 90 || diastolic < 60) status = '偏低';
+            else if (systolic > 160 || diastolic > 100) status = '高血压';
+            else if (systolic >= 140 || diastolic >= 90) status = '偏高';
+            
+            bpRecords[editBPIdx] = { systolic, diastolic, heartRate, date: bpRecords[editBPIdx].date, status };
+            localStorage.setItem('bpRecords', JSON.stringify(bpRecords));
+            
+            closeEditBPM();
+            renderBPHistory();
+            updateBPDailyAvg();
+            showBigAlert('血压记录已更新！');
+        }
+
+        // 删除血压记录
+        function deleteBP(idx) {
+            if (confirm('确定要删除这条血压记录吗？')) {
+                bpRecords.splice(idx, 1);
+                localStorage.setItem('bpRecords', JSON.stringify(bpRecords));
+                renderBPHistory();
+                updateBPDailyAvg();
+                showBigAlert('血压记录已删除');
+            }
+        }
+
+        // 打开编辑血糖弹窗
+        function editBS(idx) {
+            editBSIdx = idx;
+            const record = bsRecords[idx];
+            document.getElementById('editBsValue').value = record.value.toFixed(1);
+            selectEditBSType(record.type);
+            document.getElementById('editBSModal').classList.remove('hidden');
+        }
+
+        // 关闭编辑血糖弹窗
+        function closeEditBSM() {
+            document.getElementById('editBSModal').classList.add('hidden');
+            editBSIdx = -1;
+        }
+
+        // 保存编辑血糖
+        function saveEditBS() {
+            if (editBSIdx < 0 || editBSIdx >= bsRecords.length) return;
+            
+            const value = parseFloat(document.getElementById('editBsValue').value) || 5.6;
+            const type = document.getElementById('editAfterMealBtn').classList.contains('bg-primary-purple') ? 'afterMeal' : 'fasting';
+            
+            // 计算状态
+            let status = '正常';
+            if (type === 'fasting') {
+                if (value < 3.9) status = '偏低';
+                else if (value >= 7.0) status = '偏高';
+                else if (value >= 6.1) status = '偏高';
+            } else {
+                if (value >= 11.1) status = '偏高';
+                else if (value >= 7.8) status = '偏高';
+            }
+            
+            bsRecords[editBSIdx] = { value, type, date: bsRecords[editBSIdx].date, status };
+            localStorage.setItem('bsRecords', JSON.stringify(bsRecords));
+            
+            closeEditBSM();
+            renderBSHistory();
+            updateBSDailyAvg();
+            showBigAlert('血糖记录已更新！');
+        }
+
+        // 删除血糖记录
+        function deleteBS(idx) {
+            if (confirm('确定要删除这条血糖记录吗？')) {
+                bsRecords.splice(idx, 1);
+                localStorage.setItem('bsRecords', JSON.stringify(bsRecords));
+                renderBSHistory();
+                updateBSDailyAvg();
+                showBigAlert('血糖记录已删除');
+            }
         }
 
         function renderBPHistory() {
@@ -391,7 +644,7 @@
                 container.innerHTML = '<p class="text-center text-gray-400 py-4">暂无记录</p>';
                 return;
             }
-            container.innerHTML = bpRecords.slice(0, 10).map(r => {
+            container.innerHTML = bpRecords.slice(0, 10).map((r, idx) => {
                 const color = r.status === '正常' ? 'green' : r.status === '偏高' ? 'orange' : r.status === '高血压' ? 'red' : 'blue';
                 return `
                     <div class="bg-card-white card-radius p-3">
@@ -400,7 +653,15 @@
                                 <i class="fas fa-calendar-alt text-gray-400"></i>
                                 <span class="text-sm font-medium text-gray-600">${r.date.slice(5, 16)}</span>
                             </div>
-                            <span class="px-3 py-1 bg-${color}-100 text-${color}-600 rounded-full text-sm font-bold">${r.status}</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 bg-${color}-100 text-${color}-600 rounded-full text-sm font-bold">${r.status}</span>
+                                <button onclick="editBP(${idx})" class="w-8 h-8 bg-blue-50 text-blue-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </button>
+                                <button onclick="deleteBP(${idx})" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-trash text-sm"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="flex items-center justify-between pl-2">
@@ -438,7 +699,7 @@
                 container.innerHTML = '<p class="text-center text-gray-400 py-4">暂无记录</p>';
                 return;
             }
-            container.innerHTML = bsRecords.slice(0, 10).map(r => {
+            container.innerHTML = bsRecords.slice(0, 10).map((r, idx) => {
                 const typeText = r.type === 'fasting' ? '空腹' : '餐后';
                 const color = r.status === '正常' ? 'green' : r.status === '偏高' ? 'orange' : 'red';
                 return `
@@ -448,7 +709,15 @@
                                 <i class="fas fa-calendar-alt text-gray-400"></i>
                                 <span class="text-sm font-medium text-gray-600">${r.date.slice(5, 16)}</span>
                             </div>
-                            <span class="px-3 py-1 bg-${color}-100 text-${color}-600 rounded-full text-sm font-bold">${r.status}</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 bg-${color}-100 text-${color}-600 rounded-full text-sm font-bold">${r.status}</span>
+                                <button onclick="editBS(${idx})" class="w-8 h-8 bg-blue-50 text-blue-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </button>
+                                <button onclick="deleteBS(${idx})" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-trash text-sm"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="flex items-center justify-center">
@@ -468,6 +737,8 @@
         updateBSStatus();
         renderBPHistory();
         renderBSHistory();
+        updateBPDailyAvg();
+        updateBSDailyAvg();
 
         // 检查URL参数切换到血糖模式
         const urlParams = new URLSearchParams(window.location.search);
