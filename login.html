@@ -11,6 +11,31 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .btn-radius { border-radius: 12px; }
         input, button { -webkit-appearance: none; border-radius: 0; }
+        /* 自定义复选框样式 */
+        .custom-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            position: relative;
+        }
+        .custom-checkbox:checked {
+            background: #22c55e;
+            border-color: #22c55e;
+        }
+        .custom-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 min-h-screen">
@@ -55,13 +80,17 @@
                             <i id="eyeIcon" class="fas fa-eye text-sm"></i>
                         </button>
                     </div>
+                    <!-- 密码规则提示 -->
+                    <p class="text-xs text-gray-400 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>密码规则：6-20位字母或数字
+                    </p>
                 </div>
 
-                <!-- 自动注册选项 -->
-                <div id="registerHint" class="hidden bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-                    <label class="flex items-start space-x-2 cursor-pointer">
-                        <input type="checkbox" id="autoRegister" class="w-4 h-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                        <span class="text-sm text-gray-700">首次登录自动注册账号</span>
+                <!-- 自动注册选项 - 默认勾选 -->
+                <div class="bg-green-50 border border-green-200 rounded-xl p-3">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="autoRegister" class="custom-checkbox" checked>
+                        <span class="text-sm text-green-700 font-medium">首次登录自动注册账号</span>
                     </label>
                 </div>
 
@@ -85,7 +114,7 @@
                     <i class="fas fa-cloud text-lg mb-1"></i>
                     <span>数据云端同步</span>
                 </div>
-                <div class="flex flex-col items-center">
+<div class="flex flex-col items-center">
                     <i class="fas fa-shield-alt text-lg mb-1"></i>
                     <span>隐私安全保障</span>
                 </div>
@@ -103,21 +132,8 @@
         </div>
     </div>
 
-    <!-- 提示弹窗 -->
-    <div id="alertModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-5 text-center max-w-sm shadow-2xl">
-            <i id="alertIcon" class="fas fa-check-circle text-5xl text-green-500 mb-3"></i>
-            <p id="alertText" class="text-lg font-bold text-gray-800 mb-5 whitespace-pre-line"></p>
-            <button onclick="closeAlert()" class="w-full py-3 bg-blue-600 text-white text-lg font-bold rounded-xl active:scale-98">
-                确定
-            </button>
-        </div>
-    </div>
-
     <script src="api.js"></script>
     <script>
-        let firstLogin = true; // 标记是否首次登录
-
         // 检查是否已登录
         function checkLogin() {
             const userInfo = localStorage.getItem('userInfo');
@@ -126,19 +142,6 @@
             }
         }
         checkLogin();
-
-        // 显示提示弹窗
-        function showAlert(message, isSuccess = true) {
-            document.getElementById('alertText').textContent = message;
-            document.getElementById('alertIcon').className = isSuccess 
-                ? 'fas fa-check-circle text-5xl text-green-500 mb-3'
-                : 'fas fa-exclamation-circle text-5xl text-red-500 mb-3';
-            document.getElementById('alertModal').classList.remove('hidden');
-        }
-
-        function closeAlert() {
-            document.getElementById('alertModal').classList.add('hidden');
-        }
 
         // 显示加载中
         function showLoading(text) {
@@ -156,48 +159,44 @@
             const icon = document.getElementById('eyeIcon');
             if (input.type === 'password') {
                 input.type = 'text';
-icon.className = 'fas fa-eye-slash text-sm';
+                icon.className = 'fas fa-eye-slash text-sm';
             } else {
                 input.type = 'password';
                 icon.className = 'fas fa-eye text-sm';
             }
         }
 
-        // 检测首次登录，显示注册提示
-        function checkFirstLogin() {
-            const account = document.getElementById('loginAccount').value.trim();
-            const hint = document.getElementById('registerHint');
-            
-            if (account.length >= 3) {
-                hint.classList.remove('hidden');
-            } else {
-                hint.classList.add('hidden');
+        // 验证密码格式
+        function validatePassword(password) {
+            if (password.length < 6 || password.length > 20) {
+                return '密码长度需要6-20位';
             }
+            if (!/^[a-zA-Z0-9]+$/.test(password)) {
+                return '密码只能包含字母或数字';
+            }
+            return null;
         }
-
-        // 监听账号输入
-        document.getElementById('loginAccount').addEventListener('input', checkFirstLogin);
 
         // 执行登录
         async function doLogin() {
             const account = document.getElementById('loginAccount').value.trim();
             const password = document.getElementById('loginPassword').value;
             const autoRegister = document.getElementById('autoRegister').checked;
-            const hint = document.getElementById('registerHint');
 
             if (!account) {
-                showAlert('请输入手机号或账号', false);
+                alert('请输入手机号或账号');
                 return;
             }
 
             if (!password) {
-                showAlert('请输入密码', false);
+                alert('请输入密码');
                 return;
             }
 
-            // 检查是否需要自动注册
-            if (!hint.classList.contains('hidden') && !autoRegister) {
-                showAlert('请勾选"首次登录自动注册账号"', false);
+            // 验证密码格式
+            const pwdError = validatePassword(password);
+            if (pwdError) {
+                alert(pwdError);
                 return;
             }
 
@@ -225,15 +224,13 @@ icon.className = 'fas fa-eye-slash text-sm';
                 }
 
                 hideLoading();
-                showAlert(autoRegister ? '注册并登录成功！' : '登录成功！');
                 
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1200);
+                // 直接跳转，不弹窗
+                window.location.href = 'index.html';
 
             } catch (e) {
                 hideLoading();
-                showAlert('登录失败，请重试', false);
+                alert('登录失败，请重试');
             }
         }
 
