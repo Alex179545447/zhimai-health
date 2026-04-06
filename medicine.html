@@ -312,7 +312,7 @@
         let selectedTimes = ['morning']; // 支持多选
         let selectedCondition = 'after';
         let selectedFrequency = 'daily';
-        let selectedWeekday = 1; // 默认周一
+        let selectedWeekdays = [0,1,2,3,4,5,6]; // 默认全选（每天）
         let selectedMonthday = 1; // 默认每月1号
         let currentFilter = 'all';
         let medicines = JSON.parse(localStorage.getItem('medicines')) || [];
@@ -403,61 +403,47 @@
             
             // 计算从开始日期到今天的天数
             const daysDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            const todayWeekday = today.getDay(); // 0=周日, 1=周一...
             
             const freq = med.frequency;
             
-            // 每天：每天都显示
+            // 获取周几数组（支持多选）
+            const weekdays = med.weekdays || [0,1,2,3,4,5,6]; // 默认周一到周日
+            
+            // 检查今天是否在设定的周几中
+            const isWeekdayMatch = weekdays.includes(todayWeekday);
+            
+            // 每天：根据设定的周几显示
             if (freq === 'daily') {
-                return true;
+                return isWeekdayMatch;
             }
             
-            // 隔天：根据间隔天数判断
+            // 隔天：根据间隔天数判断 + 周几匹配
             if (freq === 'every2days') {
-                return daysDiff >= 0 && daysDiff % 2 === 0;
+                return daysDiff >= 0 && daysDiff % 2 === 0 && isWeekdayMatch;
             }
             
             // 每周：根据设置的周几判断
             if (freq === 'weekly') {
-                // 检查是否设置了具体周几
-                if (med.weekday !== undefined && med.weekday !== null) {
-                    const todayWeekday = today.getDay(); // 0=周日, 1=周一...
-                    // 如果今天不是设置的周几，不显示
-                    if (todayWeekday !== med.weekday) {
-                        return false;
-                    }
-                }
-                // 判断是否在服药周期内（从开始日期算起，每7天一个周期）
+                if (!isWeekdayMatch) return false;
                 return daysDiff >= 0 && daysDiff % 7 === 0;
             }
             
             // 每2周
             if (freq === 'every2weeks') {
-                if (med.weekday !== undefined && med.weekday !== null) {
-                    const todayWeekday = today.getDay();
-                    if (todayWeekday !== med.weekday) {
-                        return false;
-                    }
-                }
+                if (!isWeekdayMatch) return false;
                 return daysDiff >= 0 && daysDiff % 14 === 0;
             }
             
             // 每3周
             if (freq === 'every3weeks') {
-                if (med.weekday !== undefined && med.weekday !== null) {
-                    const todayWeekday = today.getDay();
-                    if (todayWeekday !== med.weekday) {
-                        return false;
-                    }
-                }
+                if (!isWeekdayMatch) return false;
                 return daysDiff >= 0 && daysDiff % 21 === 0;
             }
             
             // 每4周
             if (freq === 'every4weeks') {
-                if (med.weekday !== undefined && med.weekday !== null) {
-                    const todayWeekday = today.getDay();
-                    if (todayWeekday !== med.weekday) {
-                        return false;
+                if (!isWeekdayMatch) return false;
                     }
                 }
                 return daysDiff >= 0 && daysDiff % 28 === 0;
@@ -743,12 +729,9 @@
             selectedCondition = med.condition || 'after';
             selectCondition(selectedCondition);
             
-            // 设置周几
-            if (med.weekday !== undefined && med.weekday !== null) {
-                selectWeekday(med.weekday);
-            } else {
-                selectWeekday(1); // 默认周一
-            }
+            // 设置周几（支持多选）
+            selectedWeekdays = med.weekdays || [0,1,2,3,4,5,6];
+            updateWeekdayButtons();
             
             // 设置每月几号
             document.getElementById('monthday').value = med.monthday || 1;
@@ -778,7 +761,8 @@
             updateTimeButtons();
             selectedCondition = 'after';
             selectCondition('after');
-            selectWeekday(1); // 重置为周一
+            selectedWeekdays = [0,1,2,3,4,5,6]; // 重置为全选
+            updateWeekdayButtons();
             editingIndex = -1;
         }
 
@@ -820,11 +804,28 @@
             });
         }
 
+        // 周几选择（支持多选）
+        let selectedWeekdays = [0,1,2,3,4,5,6]; // 默认周一到周日全选
+        
         function selectWeekday(day) {
-            selectedWeekday = day;
+            const idx = selectedWeekdays.indexOf(day);
+            if (idx > -1) {
+                // 取消选择（至少保留一个）
+                if (selectedWeekdays.length > 1) {
+                    selectedWeekdays.splice(idx, 1);
+                }
+            } else {
+                // 添加选择
+                selectedWeekdays.push(day);
+                selectedWeekdays.sort((a, b) => a - b);
+            }
+            updateWeekdayButtons();
+        }
+        
+        function updateWeekdayButtons() {
             for (let i = 0; i <= 6; i++) {
                 const btn = document.getElementById('weekday' + i);
-                if (i === day) {
+                if (selectedWeekdays.includes(i)) {
                     btn.className = 'py-3 bg-primary-blue text-white rounded-xl font-bold text-sm';
                 } else {
                     btn.className = 'py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm';
@@ -833,11 +834,27 @@
         }
 
         function onFrequencyChange() {
-
             const select = document.getElementById('freqSelect');
             const customContainer = document.getElementById('customFreqContainer');
             const startDateContainer = document.getElementById('startDateContainer');
+            const weekdayContainer = document.getElementById('weekdayContainer');
+            const monthdayContainer = document.getElementById('monthdayContainer');
+            
             selectedFrequency = select.value;
+            
+            // 重置周几选择
+            if (select.value === 'daily') {
+                // 每天：默认全选（周一到周日）
+                selectedWeekdays = [0,1,2,3,4,5,6];
+            } else if (select.value === 'every2days') {
+                // 隔天：默认选中今天
+                const today = new Date().getDay();
+                selectedWeekdays = [today];
+            } else {
+                // 其他频次：默认选中周一
+                selectedWeekdays = [1];
+            }
+            updateWeekdayButtons();
             
             if (select.value === 'custom') {
                 customContainer.classList.remove('hidden');
@@ -848,8 +865,6 @@
             
             // 每天、隔天及以上频次显示开始日期选择
             const needsStartDate = ['daily', 'every2days', 'weekly', 'every2weeks', 'every3weeks', 'every4weeks', 'custom'].includes(select.value);
-            const weekdayContainer = document.getElementById('weekdayContainer');
-            const monthdayContainer = document.getElementById('monthdayContainer');
             
             if (needsStartDate) {
                 startDateContainer.classList.remove('hidden');
@@ -858,8 +873,12 @@
                     const today = new Date().toISOString().split('T')[0];
                     document.getElementById('startDate').value = today;
                 }
-                // 每周及以上频次显示周几选择
-                weekdayContainer.classList.remove('hidden');
+                // 每天显示周几提示，隔天/每周及以上显示周几选择
+                if (select.value === 'daily') {
+                    weekdayContainer.classList.add('hidden');
+                } else {
+                    weekdayContainer.classList.remove('hidden');
+                }
             } else {
                 startDateContainer.classList.add('hidden');
                 weekdayContainer.classList.add('hidden');
@@ -959,7 +978,7 @@
                 customFreqText,
                 startDate: startDate || new Date().toISOString().split('T')[0],
                 note,
-                weekday: ['weekly', 'every2weeks', 'every3weeks', 'every4weeks'].includes(frequency) ? weekday : null,
+                weekdays: selectedWeekdays, // 保存周几数组
                 monthday: monthday,
                 taken: false,
                 takenTime: null,
