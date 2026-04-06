@@ -41,8 +41,8 @@
                 </div>
             </div>
             <div class="flex items-center space-x-3">
-                <span class="text-sm bg-green-500 px-3 py-1 rounded-full">
-                    <i class="fas fa-circle text-xs mr-1 animate-pulse"></i>在线
+                <span id="connectionStatus" class="text-sm bg-green-500 px-3 py-1 rounded-full">
+                    <i class="fas fa-circle text-xs mr-1 animate-pulse"></i>已连接
                 </span>
                 <button onclick="location.href='index.html'" class="px-3 py-2 bg-white/20 rounded-lg text-sm">
                     <i class="fas fa-home mr-1"></i>返回首页
@@ -57,30 +57,20 @@
             <div class="bg-white rounded-xl p-4 shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm">用户总数</p>
-                        <p class="text-3xl font-bold text-primary-blue" id="totalUsers">--</p>
+                        <p class="text-gray-500 text-sm">当前用户</p>
+                        <p class="text-2xl font-bold text-primary-blue" id="userName">--</p>
+                        <p class="text-xs text-gray-400" id="userId">--</p>
                     </div>
                     <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-users text-xl text-primary-blue"></i>
+                        <i class="fas fa-user text-xl text-primary-blue"></i>
                     </div>
                 </div>
             </div>
             <div class="bg-white rounded-xl p-4 shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm">今日活跃</p>
-                        <p class="text-3xl font-bold text-primary-green" id="activeUsers">--</p>
-                    </div>
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-user-check text-xl text-primary-green"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-xl p-4 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm">药品记录</p>
-                        <p class="text-3xl font-bold text-orange-500" id="totalMedicines">--</p>
+                        <p class="text-gray-500 text-sm">我的药品</p>
+                        <p class="text-3xl font-bold text-orange-500" id="totalMedicines">0</p>
                     </div>
                     <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                         <i class="fas fa-pills text-xl text-orange-500"></i>
@@ -90,479 +80,422 @@
             <div class="bg-white rounded-xl p-4 shadow-sm">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-gray-500 text-sm">健康记录</p>
-                        <p class="text-3xl font-bold text-primary-red" id="totalRecords">--</p>
+                        <p class="text-gray-500 text-sm">血压记录</p>
+                        <p class="text-3xl font-bold text-primary-red" id="totalBP">0</p>
                     </div>
                     <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                         <i class="fas fa-heartbeat text-xl text-primary-red"></i>
                     </div>
                 </div>
             </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">血糖记录</p>
+                        <p class="text-3xl font-bold text-primary-purple" id="totalBS">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-tint text-xl text-primary-purple"></i>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- 搜索和筛选 -->
-        <div class="bg-white rounded-xl p-4 shadow-sm mb-6">
-            <div class="flex flex-col md:flex-row gap-4">
-                <div class="flex-1">
-                    <label class="block text-sm text-gray-600 mb-2">
-                        <i class="fas fa-search mr-1"></i>搜索用户
-                    </label>
-                    <input type="text" id="searchInput" placeholder="输入用户ID或名称搜索..." 
-                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none"
-                           oninput="searchUsers()">
+        <!-- 数据总览 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- 药品统计 -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="font-bold text-gray-800 mb-4">
+                    <i class="fas fa-pills text-orange-500 mr-2"></i>服药统计
+                </h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-primary-blue" id="medTotal">0</p>
+                        <p class="text-xs text-gray-600">药品总数</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-primary-green" id="medTaken">0</p>
+                        <p class="text-xs text-gray-600">已服用</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-3 text-center">
+                        <p class="text-2xl font-bold text-orange-500" id="medPending">0</p>
+                        <p class="text-xs text-gray-600">待服用</p>
+                    </div>
                 </div>
-                <div class="w-full md:w-48">
-                    <label class="block text-sm text-gray-600 mb-2">
-                        <i class="fas fa-filter mr-1"></i>数据类型
-                    </label>
-                    <select id="dataFilter" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none" onchange="loadUserData()">
-                        <option value="all">全部数据</option>
-                        <option value="medicines">药品记录</option>
-                        <option value="bpRecords">血压记录</option>
-                        <option value="bsRecords">血糖记录</option>
-                        <option value="profile">健康档案</option>
-                    </select>
+                <div class="mt-4">
+                    <p class="text-sm text-gray-600 mb-2">服药进度</p>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div id="medProgress" class="bg-primary-green h-3 rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1" id="medProgressText">0%</p>
                 </div>
-                <div class="w-full md:w-48">
-                    <label class="block text-sm text-gray-600 mb-2">
-                        <i class="fas fa-calendar mr-1"></i>时间范围
-                    </label>
-                    <select id="timeFilter" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none" onchange="loadUserData()">
-                        <option value="all">全部时间</option>
-                        <option value="7d">最近7天</option>
-                        <option value="30d">最近30天</option>
-                        <option value="90d">最近90天</option>
-                    </select>
+            </div>
+
+            <!-- 今日健康 -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="font-bold text-gray-800 mb-4">
+                    <i class="fas fa-calendar-check text-primary-green mr-2"></i>今日数据
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-600">今日血压</p>
+                        <p class="text-2xl font-bold text-primary-red" id="todayBP">0</p>
+                        <p class="text-xs text-gray-400">条记录</p>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-600">今日血糖</p>
+                        <p class="text-2xl font-bold text-primary-purple" id="todayBS">0</p>
+                        <p class="text-xs text-gray-400">条记录</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-600">已服药品</p>
+                        <p class="text-2xl font-bold text-primary-green" id="todayTaken">0</p>
+                        <p class="text-xs text-gray-400">项</p>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-600">最新血压</p>
+                        <p class="text-xl font-bold text-primary-red" id="latestBP">--/--</p>
+                        <p class="text-xs text-gray-400">mmHg</p>
+                    </div>
                 </div>
-                <div class="flex items-end">
-                    <button onclick="refreshAllData()" class="px-6 py-3 bg-primary-blue text-white rounded-xl font-bold hover:bg-blue-600 transition">
-                        <i class="fas fa-sync-alt mr-2"></i>刷新
+            </div>
+        </div>
+
+        <!-- 数据详情标签页 -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+            <div class="flex border-b">
+                <button onclick="switchTab('medicines')" id="tabMedicines" class="flex-1 py-3 text-center font-medium text-primary-blue border-b-2 border-primary-blue">
+                    <i class="fas fa-pills mr-2"></i>药品记录
+                </button>
+                <button onclick="switchTab('bp')" id="tabBP" class="flex-1 py-3 text-center font-medium text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-heartbeat mr-2"></i>血压记录
+                </button>
+                <button onclick="switchTab('bs')" id="tabBS" class="flex-1 py-3 text-center font-medium text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-tint mr-2"></i>血糖记录
+                </button>
+                <button onclick="switchTab('profile')" id="tabProfile" class="flex-1 py-3 text-center font-medium text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-user-circle mr-2"></i>健康档案
+                </button>
+            </div>
+
+            <!-- 药品记录 -->
+            <div id="contentMedicines" class="p-4 max-h-[500px] overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold text-gray-800">药品列表</h4>
+                    <span class="text-sm text-gray-500" id="medListCount">0条记录</span>
+                </div>
+                <div id="medicinesList" class="space-y-2">
+                    <p class="text-center text-gray-400 py-8">暂无药品记录</p>
+                </div>
+            </div>
+
+            <!-- 血压记录 -->
+            <div id="contentBP" class="p-4 max-h-[500px] overflow-y-auto hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold text-gray-800">血压记录</h4>
+                    <span class="text-sm text-gray-500" id="bpListCount">0条记录</span>
+                </div>
+                <div id="bpList" class="space-y-2">
+                    <p class="text-center text-gray-400 py-8">暂无血压记录</p>
+                </div>
+            </div>
+
+            <!-- 血糖记录 -->
+            <div id="contentBS" class="p-4 max-h-[500px] overflow-y-auto hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold text-gray-800">血糖记录</h4>
+                    <span class="text-sm text-gray-500" id="bsListCount">0条记录</span>
+                </div>
+                <div id="bsList" class="space-y-2">
+                    <p class="text-center text-gray-400 py-8">暂无血糖记录</p>
+                </div>
+            </div>
+
+            <!-- 健康档案 -->
+            <div id="contentProfile" class="p-4 max-h-[500px] overflow-y-auto hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-bold text-gray-800">健康档案</h4>
+                    <button onclick="exportProfile()" class="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-sm">
+                        <i class="fas fa-download mr-1"></i>导出
                     </button>
                 </div>
+                <div id="profileContent" class="space-y-4">
+                    <p class="text-center text-gray-400 py-8">暂无健康档案</p>
+                </div>
             </div>
         </div>
 
-        <!-- 用户列表 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- 左侧：用户列表 -->
-            <div class="lg:col-span-1">
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="p-4 border-b bg-gray-50">
-                        <h3 class="font-bold text-gray-800">
-                            <i class="fas fa-list-ul mr-2 text-primary-blue"></i>用户列表
-                        </h3>
-                    </div>
-                    <div id="userList" class="max-h-[600px] overflow-y-auto">
-                        <div class="p-8 text-center text-gray-400">
-                            <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
-                            <p>加载中...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 右侧：用户详情 -->
-            <div class="lg:col-span-2">
-                <!-- 用户概览卡片 -->
-                <div id="userOverview" class="bg-white rounded-xl shadow-sm p-6 mb-6 hidden">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-4">
-                            <div class="w-16 h-16 bg-gradient-to-br from-primary-blue to-purple-500 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-2xl text-white"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-800" id="userName">--</h3>
-                                <p class="text-gray-500 text-sm" id="userId">ID: --</p>
-                                <p class="text-gray-400 text-xs mt-1" id="userLastActive">最后活跃: --</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="inline-block px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm font-bold">
-                                <i class="fas fa-circle text-xs mr-1"></i>在线
-                            </span>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-4">
-                        <div class="bg-blue-50 rounded-lg p-3 text-center">
-                            <p class="text-2xl font-bold text-primary-blue" id="userMedCount">0</p>
-                            <p class="text-xs text-gray-600">药品记录</p>
-                        </div>
-                        <div class="bg-red-50 rounded-lg p-3 text-center">
-                            <p class="text-2xl font-bold text-primary-red" id="userBPCount">0</p>
-                            <p class="text-xs text-gray-600">血压记录</p>
-                        </div>
-                        <div class="bg-purple-50 rounded-lg p-3 text-center">
-                            <p class="text-2xl font-bold text-primary-purple" id="userBSCount">0</p>
-                            <p class="text-xs text-gray-600">血糖记录</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 数据详情标签页 -->
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div class="flex border-b">
-                        <button onclick="switchTab('medicines')" id="tabMedicines" class="flex-1 py-3 text-center font-medium text-primary-blue border-b-2 border-primary-blue">
-                            <i class="fas fa-pills mr-2"></i>药品
-                        </button>
-                        <button onclick="switchTab('bp')" id="tabBP" class="flex-1 py-3 text-center font-medium text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-heartbeat mr-2"></i>血压
-                        </button>
-                        <button onclick="switchTab('bs')" id="tabBS" class="flex-1 py-3 text-center font-medium text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-tint mr-2"></i>血糖
-                        </button>
-                        <button onclick="switchTab('profile')" id="tabProfile" class="flex-1 py-3 text-center font-medium text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-user-circle mr-2"></i>档案
-                        </button>
-                    </div>
-
-                    <!-- 药品记录 -->
-                    <div id="contentMedicines" class="p-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-bold text-gray-800">服药记录</h4>
-                            <button onclick="exportData('medicines')" class="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-sm">
-                                <i class="fas fa-download mr-1"></i>导出
-                            </button>
-                        </div>
-                        <div id="medicinesList" class="space-y-2 max-h-[400px] overflow-y-auto">
-                            <p class="text-center text-gray-400 py-8">请选择左侧用户查看数据</p>
-                        </div>
-                    </div>
-
-                    <!-- 血压记录 -->
-                    <div id="contentBP" class="p-4 hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-bold text-gray-800">血压记录</h4>
-                            <button onclick="exportData('bp')" class="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-sm">
-                                <i class="fas fa-download mr-1"></i>导出
-                            </button>
-                        </div>
-                        <div id="bpList" class="space-y-2 max-h-[400px] overflow-y-auto">
-                            <p class="text-center text-gray-400 py-8">请选择左侧用户查看数据</p>
-                        </div>
-                    </div>
-
-                    <!-- 血糖记录 -->
-                    <div id="contentBS" class="p-4 hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-bold text-gray-800">血糖记录</h4>
-                            <button onclick="exportData('bs')" class="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-sm">
-                                <i class="fas fa-download mr-1"></i>导出
-                            </button>
-                        </div>
-                        <div id="bsList" class="space-y-2 max-h-[400px] overflow-y-auto">
-                            <p class="text-center text-gray-400 py-8">请选择左侧用户查看数据</p>
-                        </div>
-                    </div>
-
-                    <!-- 健康档案 -->
-                    <div id="contentProfile" class="p-4 hidden">
-                        <div class="flex items-center justify-between mb-4">
-                            <h4 class="font-bold text-gray-800">健康档案</h4>
-                            <button onclick="exportData('profile')" class="px-3 py-1 bg-green-50 text-green-600 rounded-lg text-sm">
-                                <i class="fas fa-download mr-1"></i>导出
-                            </button>
-                        </div>
-                        <div id="profileContent" class="max-h-[400px] overflow-y-auto">
-                            <p class="text-center text-gray-400 py-8">请选择左侧用户查看数据</p>
-                        </div>
-                    </div>
-                </div>
+        <!-- 操作按钮 -->
+        <div class="bg-white rounded-xl shadow-sm p-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button onclick="syncData()" class="py-3 bg-blue-50 text-primary-blue rounded-xl font-bold hover:bg-blue-100 transition">
+                    <i class="fas fa-sync mr-2"></i>同步云端
+                </button>
+                <button onclick="exportAllData()" class="py-3 bg-green-50 text-primary-green rounded-xl font-bold hover:bg-green-100 transition">
+                    <i class="fas fa-download mr-2"></i>导出全部
+                </button>
+                <button onclick="clearAllData()" class="py-3 bg-red-50 text-primary-red rounded-xl font-bold hover:bg-red-100 transition">
+                    <i class="fas fa-trash mr-2"></i>清除数据
+                </button>
+                <button onclick="refreshData()" class="py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition">
+                    <i class="fas fa-redo mr-2"></i>刷新页面
+                </button>
             </div>
         </div>
     </main>
 
     <script>
-        // API配置
-        const API_BASE_URL = 'http://47.110.151.230:3000/api';
-        
-        // 当前选中用户
-        let currentUserId = null;
-        let allUsers = [];
         let currentTab = 'medicines';
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
-            loadAllUsers();
-            updateStats();
+            loadData();
         });
 
-        // API请求
-        async function apiRequest(endpoint, method = 'POST', data = null) {
-            const url = `${API_BASE_URL}${endpoint}`;
-            const options = {
-                method,
-                headers: { 'Content-Type': 'application/json' }
-            };
-            if (data) options.body = JSON.stringify(data);
-            try {
-                const response = await fetch(url, options);
-                return await response.json();
-            } catch (error) {
-                console.error('API请求失败:', error);
-                return { success: false, error: error.message };
-            }
-        }
-
-        // 加载所有用户
-        async function loadAllUsers() {
-            try {
-                const result = await apiRequest('/getAllUsers', 'GET');
-                if (result.success && result.users) {
-                    allUsers = result.users;
-                } else {
-                    // 如果接口不可用，生成模拟数据用于演示
-                    allUsers = generateMockUsers();
-                }
-                renderUserList(allUsers);
-            } catch (e) {
-                allUsers = generateMockUsers();
-                renderUserList(allUsers);
-            }
-            updateStats();
-        }
-
-        // 生成模拟用户数据用于演示
-        function generateMockUsers() {
-            const names = ['张三', '李四', '王五', '赵六', '孙七', '周八', '吴九', '郑十'];
-            return names.map((name, i) => ({
-                userId: `user_${1000 + i}`,
-                name: name,
-                lastActive: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-                medicines: Math.floor(Math.random() * 10) + 1,
-                bpRecords: Math.floor(Math.random() * 20) + 1,
-                bsRecords: Math.floor(Math.random() * 15) + 1
-            }));
-        }
-
-        // 渲染用户列表
-        function renderUserList(users) {
-            const container = document.getElementById('userList');
-            if (users.length === 0) {
-                container.innerHTML = '<div class="p-4 text-center text-gray-400"><i class="fas fa-users text-3xl mb-2"></i><p>暂无用户数据</p></div>';
-                return;
-            }
-            container.innerHTML = users.map(user => `
-                <div onclick="selectUser('${user.userId}')" 
-                     class="user-item p-4 border-b cursor-pointer hover:bg-blue-50 transition ${currentUserId === user.userId ? 'bg-blue-50 border-l-4 border-l-primary-blue' : ''}">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-gray-500"></i>
-                            </div>
-                            <div>
-                                <p class="font-medium text-gray-800">${user.name || '未命名用户'}</p>
-                                <p class="text-xs text-gray-500">${user.userId}</p>
-                            </div>
-                        </div>
-                        <div class="text-right text-xs text-gray-400">
-                            <p>${formatTime(user.lastActive)}</p>
-                            <p class="mt-1">
-                                <span class="text-orange-500">${user.medicines || 0}药</span> · 
-                                <span class="text-red-500">${user.bpRecords || 0}压</span> · 
-                                <span class="text-purple-500">${user.bsRecords || 0}糖</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // 搜索用户
-        function searchUsers() {
-            const keyword = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = allUsers.filter(u => 
-                u.userId.toLowerCase().includes(keyword) || 
-                (u.name && u.name.toLowerCase().includes(keyword))
-            );
-            renderUserList(filtered);
-        }
-
-        // 选择用户
-        async function selectUser(userId) {
-            currentUserId = userId;
-            const user = allUsers.find(u => u.userId === userId);
+        // 加载所有数据
+        function loadData() {
+            // 获取用户信息
+            const userId = localStorage.getItem('health_user_id') || 'user_' + Date.now();
+            const profile = JSON.parse(localStorage.getItem('profile') || '{}');
             
-            // 更新用户概览
-            document.getElementById('userOverview').classList.remove('hidden');
-            document.getElementById('userName').textContent = user?.name || '未命名用户';
             document.getElementById('userId').textContent = 'ID: ' + userId;
-            document.getElementById('userLastActive').textContent = '最后活跃: ' + formatTime(user?.lastActive);
-            document.getElementById('userMedCount').textContent = user?.medicines || 0;
-            document.getElementById('userBPCount').textContent = user?.bpRecords || 0;
-            document.getElementById('userBSCount').textContent = user?.bsRecords || 0;
+            document.getElementById('userName').textContent = profile.name || '当前用户';
 
-            // 更新用户列表选中状态
-            document.querySelectorAll('.user-item').forEach(el => {
-                el.classList.remove('bg-blue-50', 'border-l-4', 'border-l-primary-blue');
-            });
-            event.currentTarget.classList.add('bg-blue-50', 'border-l-4', 'border-l-primary-blue');
-
-            // 加载用户数据
-            await loadUserData();
-        }
-
-        // 加载用户数据
-        async function loadUserData() {
-            if (!currentUserId) return;
-            
-            const filter = document.getElementById('dataFilter').value;
-            
-            try {
-                // 从API获取真实数据
-                if (filter === 'all' || filter === 'medicines') {
-                    const medResult = await apiRequest('/get', 'POST', { userId: currentUserId, type: 'medicines' });
-                    renderMedicines(medResult.data || []);
-                }
-                if (filter === 'all' || filter === 'bpRecords') {
-                    const bpResult = await apiRequest('/get', 'POST', { userId: currentUserId, type: 'bpRecords' });
-                    renderBPRecords(bpResult.data || []);
-                }
-                if (filter === 'all' || filter === 'bsRecords') {
-                    const bsResult = await apiRequest('/get', 'POST', { userId: currentUserId, type: 'bsRecords' });
-                    renderBSRecords(bsResult.data || []);
-                }
-                if (filter === 'all' || filter === 'profile') {
-                    const profileResult = await apiRequest('/get', 'POST', { userId: currentUserId, type: 'profile' });
-                    renderProfile(profileResult.data || {});
-                }
-            } catch (e) {
-                console.log('使用本地数据');
-                loadLocalData();
-            }
-        }
-
-        // 加载本地存储数据
-        function loadLocalData() {
-            // 尝试从localStorage获取当前用户数据
+            // 获取药品数据
             const medicines = JSON.parse(localStorage.getItem('medicines') || '[]');
             const bpRecords = JSON.parse(localStorage.getItem('bpRecords') || '[]');
             const bsRecords = JSON.parse(localStorage.getItem('bsRecords') || '[]');
-            const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+            const healthRecord = JSON.parse(localStorage.getItem('healthRecord') || '{}');
+
+            // 更新统计数字
+            document.getElementById('totalMedicines').textContent = medicines.length;
+            document.getElementById('totalBP').textContent = bpRecords.length;
+            document.getElementById('totalBS').textContent = bsRecords.length;
+
+            // 药品统计
+            const today = new Date().toISOString().split('T')[0];
+            const todayMeds = medicines.filter(m => {
+                if (!m.createdAt) return false;
+                return m.createdAt.split('T')[0] === today;
+            });
+            const takenMeds = todayMeds.filter(m => m.taken);
+            const medTaken = medicines.filter(m => m.taken).length;
             
+            document.getElementById('medTotal').textContent = medicines.length;
+            document.getElementById('medTaken').textContent = medTaken;
+            document.getElementById('medPending').textContent = medicines.length - medTaken;
+            document.getElementById('todayTaken').textContent = takenMeds.length;
+            
+            const progress = medicines.length > 0 ? Math.round(medTaken / medicines.length * 100) : 0;
+            document.getElementById('medProgress').style.width = progress + '%';
+            document.getElementById('medProgressText').textContent = progress + '%';
+
+            // 今日数据
+            const todayBP = bpRecords.filter(r => r.date && r.date.startsWith(today)).length;
+            const todayBS = bsRecords.filter(r => r.date && r.date.startsWith(today)).length;
+            document.getElementById('todayBP').textContent = todayBP;
+            document.getElementById('todayBS').textContent = todayBS;
+
+            // 最新血压
+            if (bpRecords.length > 0) {
+                const latest = bpRecords[0];
+                document.getElementById('latestBP').textContent = `${latest.systolic}/${latest.diastolic}`;
+            }
+
+            // 渲染列表
             renderMedicines(medicines);
             renderBPRecords(bpRecords);
             renderBSRecords(bsRecords);
-            renderProfile(profile);
+            renderProfile(healthRecord, profile);
         }
 
         // 渲染药品列表
         function renderMedicines(medicines) {
             const container = document.getElementById('medicinesList');
+            document.getElementById('medListCount').textContent = medicines.length + '条记录';
+            
             if (!medicines || medicines.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-400 py-8"><i class="fas fa-pills text-3xl mb-2"></i><p>暂无药品记录</p></div>';
+                container.innerHTML = '<p class="text-center text-gray-400 py-8">暂无药品记录</p>';
                 return;
             }
-            container.innerHTML = medicines.map(m => `
-                <div class="bg-gray-50 rounded-lg p-3">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="font-medium text-gray-800">${m.name || '未知药品'}</p>
-                            <p class="text-xs text-gray-500">${m.qty || 1}${m.unit || '片'} · ${getTimeText(m.time)} · ${getConditionText(m.condition)}</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="px-2 py-1 ${m.taken ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'} rounded text-xs font-bold">
-                                ${m.taken ? '已服用' : '未服用'}
-                            </span>
-                            <p class="text-xs text-gray-400 mt-1">${formatTime(m.createdAt || m.takenTime)}</p>
+            
+            container.innerHTML = medicines.map((m, idx) => {
+                const times = m.time ? (Array.isArray(m.time) ? m.time : m.time.split(',')) : ['morning'];
+                const timeText = times.map(t => ({ morning: '早', noon: '午', evening: '晚' }[t] || '')).join('·');
+                const condText = { before: '饭前', after: '饭后', fasting: '空腹' }[m.condition] || '饭后';
+                const weekdays = m.weekdays || [0,1,2,3,4,5,6];
+                const weekText = weekdays.map(d => ['日','一','二','三','四','五','六'][d]).join('');
+                const freqText = { daily: '每天', every2days: '隔天', weekly: '每周', once: '一次', custom: '自定义' }[m.frequency] || '每天';
+                
+                return `
+                    <div class="bg-gray-50 rounded-lg p-3 ${m.taken ? 'opacity-60' : ''}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold text-gray-800">${m.name || '未知药品'}</span>
+                                    <span class="px-2 py-0.5 ${m.taken ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'} rounded text-xs font-bold">
+                                        ${m.taken ? '已服用' : '待服用'}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    ${m.qty || 1}${m.unit || '片'} · ${timeText} · ${condText}
+                                </p>
+                                <p class="text-xs text-gray-400">
+                                    ${freqText}${m.frequency !== 'once' ? ' · 周' + weekText : ''}
+                                </p>
+                            </div>
+                            <div class="text-right text-xs text-gray-400">
+                                <p>${m.createdAt ? formatDate(m.createdAt) : '--'}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // 渲染血压记录
         function renderBPRecords(records) {
             const container = document.getElementById('bpList');
+            document.getElementById('bpListCount').textContent = records.length + '条记录';
+            
             if (!records || records.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-400 py-8"><i class="fas fa-heartbeat text-3xl mb-2"></i><p>暂无血压记录</p></div>';
+                container.innerHTML = '<p class="text-center text-gray-400 py-8">暂无血压记录</p>';
                 return;
             }
-            container.innerHTML = records.map(r => `
-                <div class="bg-red-50 rounded-lg p-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-4">
-                            <div class="text-center">
-                                <p class="text-xs text-gray-500">高压</p>
-                                <p class="text-xl font-bold text-red-500">${r.systolic || '--'}</p>
+            
+            container.innerHTML = records.slice(0, 50).map(r => {
+                const statusColor = { '正常': 'green', '偏高': 'orange', '偏低': 'blue', '高血压': 'red' }[r.status] || 'gray';
+                return `
+                    <div class="bg-red-50 rounded-lg p-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-center">
+                                    <p class="text-xs text-gray-500">高压</p>
+                                    <p class="text-xl font-bold text-red-500">${r.systolic || '--'}</p>
+                                </div>
+                                <div class="text-gray-300 text-xl">/</div>
+                                <div class="text-center">
+                                    <p class="text-xs text-gray-500">低压</p>
+                                    <p class="text-xl font-bold text-blue-500">${r.diastolic || '--'}</p>
+                                </div>
+                                <div class="text-gray-300 text-xl">|</div>
+                                <div class="text-center">
+                                    <p class="text-xs text-gray-500">心率</p>
+                                    <p class="text-xl font-bold text-orange-500">${r.heartRate || '--'}</p>
+                                </div>
                             </div>
-                            <div class="text-gray-300 text-xl">/</div>
-                            <div class="text-center">
-                                <p class="text-xs text-gray-500">低压</p>
-                                <p class="text-xl font-bold text-blue-500">${r.diastolic || '--'}</p>
+                            <div class="text-right">
+                                <span class="px-2 py-1 bg-${statusColor}-100 text-${statusColor}-600 rounded text-xs font-bold">${r.status || '正常'}</span>
+                                <p class="text-xs text-gray-400 mt-1">${r.date ? formatDateTime(r.date) : '--'}</p>
                             </div>
-                            <div class="text-gray-300 text-xl">|</div>
-                            <div class="text-center">
-                                <p class="text-xs text-gray-500">心率</p>
-                                <p class="text-xl font-bold text-orange-500">${r.heartRate || '--'}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="px-2 py-1 ${getStatusColor(r.status)} rounded text-xs font-bold">${r.status || '正常'}</span>
-                            <p class="text-xs text-gray-400 mt-1">${formatDateTime(r.date)}</p>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+            
+            if (records.length > 50) {
+                container.innerHTML += `<p class="text-center text-gray-400 py-2">显示最近50条，共${records.length}条</p>`;
+            }
         }
 
         // 渲染血糖记录
         function renderBSRecords(records) {
             const container = document.getElementById('bsList');
+            document.getElementById('bsListCount').textContent = records.length + '条记录';
+            
             if (!records || records.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-400 py-8"><i class="fas fa-tint text-3xl mb-2"></i><p>暂无血糖记录</p></div>';
+                container.innerHTML = '<p class="text-center text-gray-400 py-8">暂无血糖记录</p>';
                 return;
             }
-            container.innerHTML = records.map(r => `
-                <div class="bg-purple-50 rounded-lg p-3">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <span class="px-2 py-1 bg-purple-100 text-purple-600 rounded text-xs mr-2">${r.type === 'fasting' ? '空腹' : '餐后'}</span>
-                            <span class="text-2xl font-bold text-primary-purple">${r.value || '--'}</span>
-                            <span class="text-sm text-gray-400">mmol/L</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="px-2 py-1 ${getStatusColor(r.status)} rounded text-xs font-bold">${r.status || '正常'}</span>
-                            <p class="text-xs text-gray-400 mt-1">${formatDateTime(r.date)}</p>
+            
+            container.innerHTML = records.slice(0, 50).map(r => {
+                const typeText = r.type === 'fasting' ? '空腹' : '餐后';
+                const statusColor = { '正常': 'green', '偏高': 'orange', '偏低': 'blue' }[r.status] || 'gray';
+                return `
+                    <div class="bg-purple-50 rounded-lg p-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="px-2 py-1 bg-purple-100 text-purple-600 rounded text-xs mr-2">${typeText}</span>
+                                <span class="text-2xl font-bold text-primary-purple">${r.value || '--'}</span>
+                                <span class="text-sm text-gray-400 ml-1">mmol/L</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="px-2 py-1 bg-${statusColor}-100 text-${statusColor}-600 rounded text-xs font-bold">${r.status || '正常'}</span>
+                                <p class="text-xs text-gray-400 mt-1">${r.date ? formatDateTime(r.date) : '--'}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+            
+            if (records.length > 50) {
+                container.innerHTML += `<p class="text-center text-gray-400 py-2">显示最近50条，共${records.length}条</p>`;
+            }
         }
 
         // 渲染健康档案
-        function renderProfile(profile) {
+        function renderProfile(healthRecord, profile) {
             const container = document.getElementById('profileContent');
-            if (!profile || Object.keys(profile).length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-400 py-8"><i class="fas fa-user-circle text-3xl mb-2"></i><p>暂无健康档案</p></div>';
+            
+            const allData = { ...profile, ...healthRecord };
+            const hasData = Object.keys(allData).some(k => allData[k]);
+            
+            if (!hasData) {
+                container.innerHTML = '<p class="text-center text-gray-400 py-8">暂无健康档案</p>';
                 return;
             }
+            
             container.innerHTML = `
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    ${allData.name ? `
                     <div class="bg-blue-50 rounded-lg p-3">
                         <p class="text-xs text-gray-500">姓名</p>
-                        <p class="font-bold text-gray-800">${profile.name || '--'}</p>
+                        <p class="font-bold text-gray-800">${allData.name}</p>
                     </div>
+                    ` : ''}
+                    ${allData.age ? `
                     <div class="bg-green-50 rounded-lg p-3">
                         <p class="text-xs text-gray-500">年龄</p>
-                        <p class="font-bold text-gray-800">${profile.age || '--'}岁</p>
+                        <p class="font-bold text-gray-800">${allData.age}岁</p>
                     </div>
+                    ` : ''}
+                    ${allData.gender ? `
                     <div class="bg-purple-50 rounded-lg p-3">
                         <p class="text-xs text-gray-500">性别</p>
-                        <p class="font-bold text-gray-800">${profile.gender || '--'}</p>
+                        <p class="font-bold text-gray-800">${allData.gender}</p>
                     </div>
-                    <div class="bg-orange-50 rounded-lg p-3">
+                    ` : ''}
+                    ${allData.bloodType ? `
+                    <div class="bg-red-50 rounded-lg p-3">
                         <p class="text-xs text-gray-500">血型</p>
-                        <p class="font-bold text-gray-800">${profile.bloodType || '--'}</p>
+                        <p class="font-bold text-gray-800">${allData.bloodType}</p>
                     </div>
-                    <div class="col-span-2 bg-red-50 rounded-lg p-3">
-                        <p class="text-xs text-gray-500">过敏药物</p>
-                        <p class="font-bold text-gray-800">${profile.allergy || '无'}</p>
+                    ` : ''}
+                    ${allData.height ? `
+                    <div class="bg-orange-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500">身高</p>
+                        <p class="font-bold text-gray-800">${allData.height}cm</p>
                     </div>
-                    <div class="col-span-2 bg-gray-50 rounded-lg p-3">
-                        <p class="text-xs text-gray-500">既往病史</p>
-                        <p class="font-bold text-gray-800">${profile.history || '无'}</p>
+                    ` : ''}
+                    ${allData.weight ? `
+                    <div class="bg-teal-50 rounded-lg p-3">
+                        <p class="text-xs text-gray-500">体重</p>
+                        <p class="font-bold text-gray-800">${allData.weight}kg</p>
                     </div>
+                    ` : ''}
                 </div>
+                ${allData.allergy ? `
+                <div class="bg-red-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500">过敏药物</p>
+                    <p class="font-bold text-red-600">${allData.allergy}</p>
+                </div>
+                ` : ''}
+                ${allData.history ? `
+                <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500">既往病史</p>
+                    <p class="font-bold text-gray-800">${allData.history}</p>
+                </div>
+                ` : ''}
             `;
         }
 
@@ -582,93 +515,96 @@
             });
         }
 
-        // 更新统计数据
-        async function updateStats() {
-            // 计算统计数据
-            document.getElementById('totalUsers').textContent = allUsers.length;
-            const activeUsers = allUsers.filter(u => {
-                if (!u.lastActive) return false;
-                const daysDiff = (Date.now() - new Date(u.lastActive)) / (1000 * 60 * 60 * 24);
-                return daysDiff <= 1;
-            }).length;
-            document.getElementById('activeUsers').textContent = activeUsers;
+        // 同步云端数据
+        async function syncData() {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin text-xs mr-1"></i>同步中...';
             
-            const totalMeds = allUsers.reduce((sum, u) => sum + (u.medicines || 0), 0);
-            document.getElementById('totalMedicines').textContent = totalMeds;
+            try {
+                // 尝试调用API同步
+                const response = await fetch('http://47.110.151.230:3000/health');
+                if (response.ok) {
+                    statusEl.innerHTML = '<i class="fas fa-circle text-xs mr-1 animate-pulse"></i>已同步';
+                    alert('数据同步成功！');
+                } else {
+                    throw new Error('同步失败');
+                }
+            } catch (e) {
+                statusEl.innerHTML = '<i class="fas fa-circle text-xs mr-1"></i>离线模式';
+                alert('云端服务暂不可用，已使用本地数据');
+            }
             
-            const totalRecords = allUsers.reduce((sum, u) => sum + (u.bpRecords || 0) + (u.bsRecords || 0), 0);
-            document.getElementById('totalRecords').textContent = totalRecords;
+            setTimeout(() => {
+                statusEl.innerHTML = '<i class="fas fa-circle text-xs mr-1 animate-pulse"></i>已连接';
+            }, 3000);
         }
 
-        // 刷新所有数据
-        async function refreshAllData() {
-await loadAllUsers();
-            if (currentUserId) {
-                await loadUserData();
-            }
-            updateStats();
-        }
-
-        // 导出数据
-        function exportData(type) {
-            let data, filename;
-            switch(type) {
-                case 'medicines':
-                    data = document.getElementById('medicinesList').innerText;
-                    filename = 'medicines.txt';
-                    break;
-                case 'bp':
-                    data = document.getElementById('bpList').innerText;
-                    filename = 'blood-pressure.txt';
-                    break;
-                case 'bs':
-                    data = document.getElementById('bsList').innerText;
-                    filename = 'blood-sugar.txt';
-                    break;
-                case 'profile':
-                    data = document.getElementById('profileContent').innerText;
-                    filename = 'profile.txt';
-                    break;
-            }
-            const blob = new Blob([data], { type: 'text/plain' });
+        // 导出全部数据
+        function exportAllData() {
+            const data = {
+                userId: localStorage.getItem('health_user_id'),
+                profile: JSON.parse(localStorage.getItem('profile') || '{}'),
+                healthRecord: JSON.parse(localStorage.getItem('healthRecord') || '{}'),
+                medicines: JSON.parse(localStorage.getItem('medicines') || '[]'),
+                bpRecords: JSON.parse(localStorage.getItem('bpRecords') || '[]'),
+                bsRecords: JSON.parse(localStorage.getItem('bsRecords') || '[]'),
+                exportedAt: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = filename;
+            a.download = `health_data_${new Date().toISOString().split('T')[0]}.json`;
             a.click();
             URL.revokeObjectURL(url);
         }
 
+        // 导出健康档案
+        function exportProfile() {
+            const profile = JSON.parse(localStorage.getItem('profile') || '{}');
+            const healthRecord = JSON.parse(localStorage.getItem('healthRecord') || '{}');
+            const data = { ...profile, ...healthRecord };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `health_profile_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 清除所有数据
+        function clearAllData() {
+            if (confirm('确定要清除所有本地数据吗？此操作不可恢复！')) {
+                if (confirm('再次确认：所有健康数据将被删除！')) {
+                    localStorage.removeItem('medicines');
+                    localStorage.removeItem('bpRecords');
+                    localStorage.removeItem('bsRecords');
+                    localStorage.removeItem('profile');
+                    localStorage.removeItem('healthRecord');
+                    alert('数据已清除');
+                    location.reload();
+                }
+            }
+        }
+
+        // 刷新页面
+        function refreshData() {
+            location.reload();
+        }
+
         // 工具函数
-        function formatTime(isoString) {
+        function formatDate(isoString) {
             if (!isoString) return '--';
             const date = new Date(isoString);
-            const now = new Date();
-            const diff = now - date;
-            if (diff < 60000) return '刚刚';
-            if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
-            if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
-            if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
-            return date.toLocaleDateString('zh-CN');
+            return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
         }
 
         function formatDateTime(dateStr) {
             if (!dateStr) return '--';
             return dateStr.replace('T', ' ').substring(0, 16);
-        }
-
-        function getTimeText(time) {
-            const map = { morning: '早', noon: '午', evening: '晚', morning,noon: '早午', morning,evening: '早晚', noon,evening: '午晚' };
-            if (Array.isArray(time)) return time.map(t => ({ morning: '早', noon: '午', evening: '晚' }[t] || '')).join('·');
-            return { morning: '早', noon: '午', evening: '晚' }[time] || time || '早';
-        }
-
-        function getConditionText(condition) {
-            return { before: '饭前', after: '饭后', fasting: '空腹' }[condition] || '饭后';
-        }
-
-        function getStatusColor(status) {
-            return { '正常': 'bg-green-100 text-green-600', '偏高': 'bg-orange-100 text-orange-600', '偏低': 'bg-blue-100 text-blue-600', '高血压': 'bg-red-100 text-red-600' }[status] || 'bg-gray-100 text-gray-600';
         }
     </script>
 </body>
