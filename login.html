@@ -7,147 +7,108 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        * { -webkit-tap-highlight-color: transparent; }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .btn-radius { border-radius: 12px; }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        .countdown-pulse { animation: pulse 1s ease-in-out infinite; }
-        input:focus { outline: none; }
+        input, button { -webkit-appearance: none; border-radius: 0; }
     </style>
 </head>
 <body class="bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 min-h-screen">
-    <div class="min-h-screen flex flex-col items-center justify-center px-6 py-8">
+    <div class="min-h-screen flex flex-col items-center justify-center px-4 py-6">
         
         <!-- Logo区域 -->
-        <div class="text-center mb-8">
-            <div class="w-20 h-20 bg-white rounded-3xl shadow-2xl mx-auto mb-4 flex items-center justify-center">
-                <i class="fas fa-heartbeat text-4xl text-red-500"></i>
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto mb-3 flex items-center justify-center">
+                <i class="fas fa-heartbeat text-3xl text-red-500"></i>
             </div>
-            <h1 class="text-2xl font-bold text-white mb-1">家庭健康驾驶舱</h1>
-            <p class="text-white/80 text-sm">守护您和家人的健康</p>
+            <h1 class="text-xl font-bold text-white">家庭健康驾驶舱</h1>
+            <p class="text-white/70 text-xs mt-1">守护您和家人的健康</p>
         </div>
 
         <!-- 登录卡片 -->
-        <div class="bg-white/95 backdrop-blur rounded-3xl p-6 mb-6 w-full max-w-sm shadow-2xl">
-            <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">
+        <div class="bg-white rounded-2xl p-5 mb-4 w-full max-w-sm shadow-xl">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 text-center">
                 <i class="fas fa-user-circle text-blue-600 mr-2"></i>用户登录
             </h2>
 
-            <!-- 登录方式切换 -->
-            <div class="flex bg-gray-100 rounded-xl p-1 mb-6">
-                <button id="tabPhone" onclick="switchTab('phone')" class="flex-1 py-3 rounded-lg text-base font-bold bg-blue-600 text-white transition-all">
-                    手机号登录
-                </button>
-                <button id="tabPassword" onclick="switchTab('password')" class="flex-1 py-3 rounded-lg text-base font-bold text-gray-500 transition-all">
-                    账号密码登录
-                </button>
-            </div>
-
-            <!-- 手机号登录表单 -->
-            <div id="phoneForm">
-                <div class="space-y-4">
-                    <!-- 手机号输入 -->
-                    <div>
-                        <label class="block text-base font-medium text-gray-700 mb-2">手机号码</label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">+86</span>
-                            <input type="tel" id="phoneNumber" placeholder="请输入手机号" 
-                                   class="w-full pl-14 pr-4 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors bg-white"
-                                   maxlength="11" oninput="this.value=this.value.replace(/\D/g,'')">
-                        </div>
-                    </div>
-
-                    <!-- 验证码输入 -->
-                    <div>
-                        <label class="block text-base font-medium text-gray-700 mb-2">验证码</label>
-                        <div class="flex space-x-2">
-                            <input type="text" id="verifyCode" placeholder="请输入验证码" 
-                                   class="flex-1 px-4 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors text-center tracking-widest bg-white"
-                                   maxlength="6" oninput="this.value=this.value.replace(/\D/g,'')">
-                            <button id="sendCodeBtn" onclick="sendVerifyCode()" 
-                                    class="px-3 py-4 bg-blue-600 text-white rounded-xl font-bold text-sm whitespace-nowrap active:scale-95 transition-transform shadow-md hover:bg-blue-700">
-                                获取验证码
-                            </button>
-                        </div>
+            <div class="space-y-3">
+                <!-- 手机号/账号 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">手机号码 / 账号</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" id="loginAccount" placeholder="请输入手机号或账号" 
+                               class="w-full pl-10 pr-3 py-3 text-base border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                               style="font-size: 14px;">
                     </div>
                 </div>
-            </div>
 
-            <!-- 账号密码登录表单 -->
-            <div id="passwordForm" class="hidden">
-                <div class="space-y-4">
-                    <!-- 手机号/账号 -->
-                    <div>
-                        <label class="block text-base font-medium text-gray-700 mb-2">手机号码 / 账号</label>
-                        <div class="relative">
-                            <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            <input type="text" id="loginAccount" placeholder="请输入手机号或账号" 
-                                   class="w-full pl-12 pr-4 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors bg-white">
-                        </div>
-                    </div>
-
-                    <!-- 密码 -->
-                    <div>
-                        <label class="block text-base font-medium text-gray-700 mb-2">密码</label>
-                        <div class="relative">
-                            <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                            <input type="password" id="loginPassword" placeholder="请输入密码" 
-                                   class="w-full pl-12 pr-12 py-4 text-xl border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors bg-white">
-                            <button onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                                <i id="eyeIcon" class="fas fa-eye"></i>
-                            </button>
-                        </div>
+                <!-- 密码 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">密码</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="password" id="loginPassword" placeholder="请输入密码" 
+                               class="w-full pl-10 pr-10 py-3 text-base border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                               style="font-size: 14px;">
+                        <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i id="eyeIcon" class="fas fa-eye text-sm"></i>
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- 登录按钮 -->
-            <button id="loginBtn" onclick="doLogin()" 
-                    class="w-full py-4 bg-blue-600 text-white text-xl font-bold rounded-xl shadow-lg active:scale-95 transition-transform mt-6 hover:bg-blue-700">
-                <i class="fas fa-sign-in-alt mr-2"></i>登 录
-            </button>
+                <!-- 自动注册选项 -->
+                <div id="registerHint" class="hidden bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                    <label class="flex items-start space-x-2 cursor-pointer">
+                        <input type="checkbox" id="autoRegister" class="w-4 h-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-sm text-gray-700">首次登录自动注册账号</span>
+                    </label>
+                </div>
+
+                <!-- 登录按钮 -->
+                <button id="loginBtn" onclick="doLogin()" 
+                        class="w-full py-3 bg-blue-600 text-white text-lg font-bold rounded-xl shadow-md active:scale-98 transition-transform mt-2">
+                    <i class="fas fa-sign-in-alt mr-2"></i>登 录
+                </button>
+            </div>
 
             <!-- 提示 -->
-            <p class="text-center text-gray-400 text-sm mt-6">
+            <p class="text-center text-gray-400 text-xs mt-4">
                 登录即表示同意<a href="#" class="text-blue-600 font-medium">《用户协议》</a>和<a href="#" class="text-blue-600 font-medium">《隐私政策》</a>
             </p>
         </div>
 
         <!-- 功能说明 -->
-        <div class="bg-white/20 backdrop-blur rounded-2xl p-4 w-full max-w-sm">
-            <div class="grid grid-cols-2 gap-4 text-center text-white text-sm">
+        <div class="bg-white/20 backdrop-blur rounded-xl p-3 w-full max-w-sm">
+            <div class="grid grid-cols-2 gap-3 text-center text-white text-xs">
                 <div class="flex flex-col items-center">
-                    <i class="fas fa-cloud text-2xl mb-1"></i>
+                    <i class="fas fa-cloud text-lg mb-1"></i>
                     <span>数据云端同步</span>
                 </div>
                 <div class="flex flex-col items-center">
-                    <i class="fas fa-shield-alt text-2xl mb-1"></i>
+                    <i class="fas fa-shield-alt text-lg mb-1"></i>
                     <span>隐私安全保障</span>
                 </div>
             </div>
         </div>
 
-        <!-- 底部版本 -->
-        <p class="text-white/50 text-sm mt-6">v2.0</p>
+        <p class="text-white/40 text-xs mt-4">v2.0</p>
     </div>
 
     <!-- 加载中弹窗 -->
-    <div id="loadingModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-6">
-        <div class="bg-white rounded-3xl p-8 text-center max-w-xs">
-            <i class="fas fa-spinner fa-spin text-5xl text-blue-600 mb-4"></i>
-            <p id="loadingText" class="text-xl font-bold text-gray-700">处理中...</p>
+    <div id="loadingModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 text-center max-w-xs">
+            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-3"></i>
+            <p id="loadingText" class="text-lg font-bold text-gray-700">处理中...</p>
         </div>
     </div>
 
     <!-- 提示弹窗 -->
-    <div id="alertModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-6">
-        <div class="bg-white rounded-3xl p-6 text-center max-w-sm shadow-2xl">
-            <i id="alertIcon" class="fas fa-check-circle text-6xl text-green-500 mb-4"></i>
-            <p id="alertText" class="text-xl font-bold text-gray-800 mb-6 whitespace-pre-line"></p>
-            <button onclick="closeAlert()" class="w-full py-4 bg-blue-600 text-white text-xl font-bold rounded-xl active:scale-95">
+    <div id="alertModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-5 text-center max-w-sm shadow-2xl">
+            <i id="alertIcon" class="fas fa-check-circle text-5xl text-green-500 mb-3"></i>
+            <p id="alertText" class="text-lg font-bold text-gray-800 mb-5 whitespace-pre-line"></p>
+            <button onclick="closeAlert()" class="w-full py-3 bg-blue-600 text-white text-lg font-bold rounded-xl active:scale-98">
                 确定
             </button>
         </div>
@@ -155,10 +116,7 @@
 
     <script src="api.js"></script>
     <script>
-        let loginType = 'phone'; // 'phone' 或 'password'
-        let countdownTimer = null;
-        let currentCode = null;
-        let codeExpireTime = null;
+        let firstLogin = true; // 标记是否首次登录
 
         // 检查是否已登录
         function checkLogin() {
@@ -169,36 +127,12 @@
         }
         checkLogin();
 
-        // 切换登录方式
-        function switchTab(tab) {
-            loginType = tab;
-            const phoneTab = document.getElementById('tabPhone');
-            const passwordTab = document.getElementById('tabPassword');
-            const phoneForm = document.getElementById('phoneForm');
-            const passwordForm = document.getElementById('passwordForm');
-            const loginBtn = document.getElementById('loginBtn');
-
-            if (tab === 'phone') {
-                phoneTab.className = 'flex-1 py-3 rounded-lg text-base font-bold bg-blue-600 text-white transition-all';
-                passwordTab.className = 'flex-1 py-3 rounded-lg text-base font-bold text-gray-500 transition-all';
-                phoneForm.classList.remove('hidden');
-                passwordForm.classList.add('hidden');
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>手机号登录';
-            } else {
-                passwordTab.className = 'flex-1 py-3 rounded-lg text-base font-bold bg-blue-600 text-white transition-all';
-                phoneTab.className = 'flex-1 py-3 rounded-lg text-base font-bold text-gray-500 transition-all';
-                passwordForm.classList.remove('hidden');
-                phoneForm.classList.add('hidden');
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>账号密码登录';
-            }
-        }
-
         // 显示提示弹窗
         function showAlert(message, isSuccess = true) {
             document.getElementById('alertText').textContent = message;
             document.getElementById('alertIcon').className = isSuccess 
-                ? 'fas fa-check-circle text-6xl text-green-500 mb-4'
-                : 'fas fa-exclamation-circle text-6xl text-red-500 mb-4';
+                ? 'fas fa-check-circle text-5xl text-green-500 mb-3'
+                : 'fas fa-exclamation-circle text-5xl text-red-500 mb-3';
             document.getElementById('alertModal').classList.remove('hidden');
         }
 
@@ -222,134 +156,65 @@
             const icon = document.getElementById('eyeIcon');
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.className = 'fas fa-eye-slash';
+icon.className = 'fas fa-eye-slash text-sm';
             } else {
                 input.type = 'password';
-                icon.className = 'fas fa-eye';
+                icon.className = 'fas fa-eye text-sm';
             }
         }
 
-        // 发送验证码
-        function sendVerifyCode() {
-            const phone = document.getElementById('phoneNumber').value.trim();
+        // 检测首次登录，显示注册提示
+        function checkFirstLogin() {
+            const account = document.getElementById('loginAccount').value.trim();
+            const hint = document.getElementById('registerHint');
             
-            if (!phone || phone.length !== 11) {
-                showAlert('请输入正确的11位手机号', false);
-                return;
+            if (account.length >= 3) {
+                hint.classList.remove('hidden');
+            } else {
+                hint.classList.add('hidden');
             }
-
-            if (!/^1[3-9]\d{9}$/.test(phone)) {
-                showAlert('手机号格式不正确', false);
-                return;
-            }
-
-            // 生成验证码
-            currentCode = Math.floor(1000 + Math.random() * 9000).toString();
-            codeExpireTime = Date.now() + 60000;
-
-            showAlert(`验证码已发送！\n\n模拟环境验证码：{currentCode}`);
-            
-            startCountdown();
         }
 
-        // 倒计时
-        function startCountdown() {
-            const btn = document.getElementById('sendCodeBtn');
-            let seconds = 60;
-            
-            btn.disabled = true;
-            btn.classList.add('bg-gray-300', 'countdown-pulse', 'text-gray-600');
-            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            
-            countdownTimer = setInterval(() => {
-                seconds--;
-                btn.textContent = `${seconds}秒后重发`;
-                
-                if (seconds <= 0) {
-                    clearInterval(countdownTimer);
-                    btn.disabled = false;
-                    btn.textContent = '获取验证码';
-                    btn.classList.remove('bg-gray-300', 'countdown-pulse', 'text-gray-600');
-                    btn.classList.add('bg-blue-600', 'text-white', 'hover:bg-blue-700');
-                    currentCode = null;
-                }
-            }, 1000);
-        }
+        // 监听账号输入
+        document.getElementById('loginAccount').addEventListener('input', checkFirstLogin);
 
         // 执行登录
         async function doLogin() {
-            let userId, loginInfo;
+            const account = document.getElementById('loginAccount').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const autoRegister = document.getElementById('autoRegister').checked;
+            const hint = document.getElementById('registerHint');
 
-            if (loginType === 'phone') {
-                // 手机号登录
-                const phone = document.getElementById('phoneNumber').value.trim();
-                const code = document.getElementById('verifyCode').value.trim();
+            if (!account) {
+                showAlert('请输入手机号或账号', false);
+                return;
+            }
 
-                if (!phone || phone.length !== 11) {
-                    showAlert('请输入正确的手机号', false);
-                    return;
-                }
+            if (!password) {
+                showAlert('请输入密码', false);
+                return;
+            }
 
-                if (!code || code.length < 4) {
-                    showAlert('请输入验证码', false);
-                    return;
-                }
-
-                // 验证码验证
-                if (currentCode && code !== currentCode && code !== '1234') {
-                    showAlert('验证码错误', false);
-                    return;
-                }
-
-                if (!currentCode && code !== '1234') {
-                    showAlert('验证码错误或已过期', false);
-                    return;
-                }
-
-                if (codeExpireTime && Date.now() > codeExpireTime && code !== '1234') {
-                    showAlert('验证码已过期，请重新获取', false);
-                    return;
-                }
-
-                userId = 'phone_' + phone;
-                loginInfo = {
-                    phone: phone,
-                    username: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
-                    loginType: 'phone'
-                };
-
-            } else {
-                // 账号密码登录
-                const account = document.getElementById('loginAccount').value.trim();
-                const password = document.getElementById('loginPassword').value;
-
-                if (!account) {
-                    showAlert('请输入手机号或账号', false);
-                    return;
-                }
-
-                if (!password) {
-                    showAlert('请输入密码', false);
-                    return;
-                }
-
-                userId = 'user_' + account;
-                loginInfo = {
-                    account: account,
-                    username: account.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
-                    loginType: 'password'
-                };
+            // 检查是否需要自动注册
+            if (!hint.classList.contains('hidden') && !autoRegister) {
+                showAlert('请勾选"首次登录自动注册账号"', false);
+                return;
             }
 
             showLoading('正在登录...');
 
             try {
+                const userId = 'user_' + account;
+                
                 localStorage.setItem('health_user_id', userId);
                 localStorage.setItem('isLoggedIn', 'true');
                 localStorage.setItem('userInfo', JSON.stringify({
                     userId: userId,
-                    ...loginInfo,
-                    loginTime: new Date().toISOString()
+                    account: account,
+                    username: account.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+                    loginType: 'password',
+                    loginTime: new Date().toISOString(),
+                    autoRegistered: autoRegister
                 }));
 
                 // 尝试同步云端数据
@@ -360,11 +225,11 @@
                 }
 
                 hideLoading();
-                showAlert('登录成功！\n您的健康数据已同步到云端');
+                showAlert(autoRegister ? '注册并登录成功！' : '登录成功！');
                 
                 setTimeout(() => {
                     window.location.href = 'index.html';
-                }, 1500);
+                }, 1200);
 
             } catch (e) {
                 hideLoading();
