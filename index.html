@@ -235,15 +235,46 @@
             const startDateStr = med.startDate || todayStr;
             const startDate = new Date(startDateStr + 'T00:00:00+08:00');
             const daysDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            const todayWeekday = today.getDay(); // 0=周日, 1=周一...
             
             const freq = med.frequency;
             
-            if (freq === 'daily') return true;
-            if (freq === 'every2days') return daysDiff >= 0 && daysDiff % 2 === 0;
-            if (freq === 'weekly' || freq === 'every2weeks' || freq === 'every3weeks' || freq === 'every4weeks') {
-                const interval = { weekly: 7, every2weeks: 14, every3weeks: 21, every4weeks: 28 }[freq];
-                return daysDiff >= 0 && daysDiff % interval === 0;
+            // 获取周几数组（支持多选）
+            const weekdays = med.weekdays || [0,1,2,3,4,5,6]; // 默认周一到周日
+            
+            // 检查今天是否在设定的周几中
+            const isWeekdayMatch = weekdays.includes(todayWeekday);
+            
+            // 每天：根据设定的周几显示
+            if (freq === 'daily') {
+                return isWeekdayMatch;
             }
+            
+            // 每周：根据设置的周几判断
+            if (freq === 'weekly') {
+                if (!isWeekdayMatch) return false;
+                return daysDiff >= 0 && daysDiff % 7 === 0;
+            }
+            
+            // 每2周
+            if (freq === 'every2weeks') {
+                if (!isWeekdayMatch) return false;
+                return daysDiff >= 0 && daysDiff % 14 === 0;
+            }
+            
+            // 每3周
+            if (freq === 'every3weeks') {
+                if (!isWeekdayMatch) return false;
+                return daysDiff >= 0 && daysDiff % 21 === 0;
+            }
+            
+            // 每4周
+            if (freq === 'every4weeks') {
+                if (!isWeekdayMatch) return false;
+                return daysDiff >= 0 && daysDiff % 28 === 0;
+            }
+            
+            // 自定义
             if (freq === 'custom' && med.customFreqText) {
                 const match = med.customFreqText.match(/(\d+)/);
                 if (match) return daysDiff >= 0 && daysDiff % parseInt(match[1]) === 0;
