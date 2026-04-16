@@ -1,4 +1,4 @@
-name: 🚀 Deploy to Alibaba Cloud ECS
+name: Deploy to Alibaba Cloud
 
 on:
   push:
@@ -6,57 +6,45 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
-      # 1. 拉取代码
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      # 2. 部署到服务器
-      - name: Deploy to Alibaba Cloud ECS
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.ECS_HOST }}
-          username: ${{ secrets.ECS_USER }}
-          password: ${{ secrets.ECS_PASSWORD }}
-          port: ${{ secrets.ECS_PORT }}
-          script: |
-            # 创建网站目录
-            sudo mkdir -p /www/wwwroot/health.zhimai-ai.cn
-            
-            # 进入网站目录并拉取代码
-            cd /www/wwwroot/health.zhimai-ai.cn
-            sudo git init 2>/dev/null || true
-            sudo git remote add origin https://github.com/Alex179545447/zhimai-health.git 2>/dev/null || true
-            sudo git fetch origin main
-            sudo git reset --hard origin/main
-            
-            # 设置权限
-            sudo chown -R www:www /www/wwwroot/health.zhimai-ai.cn
-            sudo chmod -R 755 /www/wwwroot/health.zhimai-ai.cn
-            
-            # 重启Nginx
-            sudo systemctl reload nginx 2>/dev/null || sudo nginx -s reload 2>/dev/null || true
-            
-            echo "========================================"
-            echo "🎉 部署完成!"
-            echo "========================================"
-            echo "网站地址: https://health.zhimai-ai.cn"
-            echo "========================================"
-
-  # 3. 验证部署
-  verify:
-    needs: build-and-deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Verify deployment
-        run: |
-          echo "========================================"
-          echo "🎉 部署验证成功!"
-          echo "========================================"
-          echo "网站地址: https://health.zhimai-ai.cn"
-          echo "GitHub仓库: ${{ github.repository }}"
-          echo "部署时间: $(date)"
-          echo "========================================"
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to Server via SSH
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.ECS_HOST }}
+        username: ${{ secrets.ECS_USER }}
+        port: ${{ secrets.ECS_PORT }}
+        password: ${{ secrets.ECS_PASSWORD }}
+        script: |
+          # 创建备份
+          BACKUP_DIR="/www/wwwroot/backup/health"
+          mkdir -p $BACKUP_DIR
+          cp -r /www/wwwroot/health.zhimai-ai.cn $BACKUP_DIR/backup_$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
+          
+          # 同步文件
+          cd /www/wwwroot/health.zhimai-ai.cn
+          # 删除旧文件（保留目录结构）
+          rm -rf * 2>/dev/null || true
+          
+          # 使用rsync同步新文件（如果可用）
+          if command -v rsync &> /dev/null; then
+            rsync -avz --exclude='.git' --exclude='.github' --exclude='node_modules' /home/runner/work/zhimai-health/zhimai-health/ /www/wwwroot/health.zhimai-ai.cn/
+          else
+            # 手动复制文件
+            cp -r /home/runner/work/zhimai-health/zhimai-health/* /www/wwwroot/health.zhimai-ai.cn/ 2>/dev/null || true
+            cp -r /home/runner/work/zhimai-health/zhimai-health/.* /www/wwwroot/health.zhimai-ai.cn/ 2>/dev/null || true
+          fi
+          
+          # 设置权限
+          chown -R www:www /www/wwwroot/health.zhimai-ai.cn
+          chmod -R 755 /www/wwwroot/health.zhimai-ai.cn
+          
+          # 重启Nginx
+          systemctl reload nginx
+          
+          echo "Deployment completed successfully!"
