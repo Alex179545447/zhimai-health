@@ -258,14 +258,15 @@
             const freq = med.frequency;
             
             // 获取周几数组（支持多选）
-            const weekdays = med.weekdays || [0,1,2,3,4,5,6]; // 默认周一到周日
+            const weekdays = med.weekdays;
             
-            // 检查今天是否在设定的周几中
-            const isWeekdayMatch = weekdays.includes(todayWeekday);
-            
-            // 每天：根据设定的周几显示
+            // 每天：直接返回true，不检查周几（weekdays为空数组表示不限制）
             if (freq === 'daily') {
-                return isWeekdayMatch;
+                // 如果weekdays存在且有内容，才检查周几；否则默认每天
+                if (weekdays && weekdays.length > 0) {
+                    return weekdays.includes(todayWeekday);
+                }
+                return true; // 默认每天
             }
             
             // 每周：根据设置的周几判断
