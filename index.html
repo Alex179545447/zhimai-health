@@ -284,14 +284,12 @@
         }
 
 
-        // 渲染当前时段提醒
+        // 渲染当前时段提醒 - 显示所有未服用的药品
         function renderPeriodAlert() {
-            const period = getCurrentPeriod();
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
             
-            // 只获取当前时段、今天应显示、且未服用的药品（使用timeMatches支持多选时段）
+            // 获取所有今天应显示、且未服用的药品
             const pending = medicines.filter(m => 
-                timeMatches(m.time, period.key) && 
                 !m.taken && 
                 m.frequency !== 'once' &&
                 shouldShowToday(m)
@@ -303,10 +301,10 @@
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                            <i class="fas ${period.icon} text-3xl mr-3"></i>
+                            <i class="fas fa-check-circle text-3xl text-green-500 mr-3"></i>
                             <div>
-                                <p class="font-bold text-lg">现在是${period.text}</p>
-                                <p class="text-sm opacity-90">${period.text}暂无待服药品</p>
+                                <p class="font-bold text-lg">今日服药已完成</p>
+                                <p class="text-sm opacity-90">暂无待服药品</p>
                             </div>
                         </div>
                         <i class="fas fa-check-circle text-3xl opacity-50"></i>
@@ -318,13 +316,13 @@
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                            <i class="fas ${period.icon} text-3xl mr-3"></i>
+                            <i class="fas fa-pills text-3xl text-primary-orange mr-3"></i>
                             <div>
-                                <p class="font-bold text-lg">${period.text}服药提醒</p>
+                                <p class="font-bold text-lg">今日待服药提醒</p>
                                 <p class="text-sm opacity-90">${names}${more}待服用</p>
                             </div>
                         </div>
-                        <button onclick="takePeriodMedicine('${period.key}')" class="px-4 py-2 bg-white text-primary-orange rounded-xl font-bold text-sm">
+                        <button onclick="takeAllPending()" class="px-4 py-2 bg-white text-primary-orange rounded-xl font-bold text-sm">
                             <i class="fas fa-check mr-1"></i>立即服用
                         </button>
                     </div>
@@ -441,9 +439,10 @@
             const bpRecords = JSON.parse(localStorage.getItem('bpRecords')) || [];
             const today = new Date().toISOString().slice(0, 10);
             
-            const todayMeds = medicines.filter(m => m.taken);
-            const todayBP = bpRecords.filter(r => r.date.includes(today));
-            const pending = medicines.filter(m => !m.taken && m.frequency !== 'once');
+            // 只统计今天应该显示的药品
+            const todayMeds = medicines.filter(m => m.taken && m.frequency !== 'once' && shouldShowToday(m));
+            const todayBP = bpRecords.filter(r => r.date && r.date.includes(today));
+            const pending = medicines.filter(m => !m.taken && m.frequency !== 'once' && shouldShowToday(m));
             
             document.getElementById('todayMedicine').textContent = todayMeds.length;
             document.getElementById('todayBP').textContent = todayBP.length;
