@@ -35,6 +35,16 @@
         .calendar-day.selected { background-color: #22C55E; color: white; }
         .calendar-day.selected .text-gray-500 { color: rgba(255,255,255,0.8) !important; }
     </style>
+    
+    <!-- 大字体提示弹窗 -->
+    <div id="bigAlert" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center p-6">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl">
+            <p id="bigAlertText" class="text-2xl font-bold text-gray-800 text-center leading-relaxed whitespace-pre-line"></p>
+            <button onclick="closeBigAlert()" class="w-full mt-6 py-4 bg-primary-blue text-white text-xl font-bold rounded-2xl active:scale-95">
+                确定
+            </button>
+        </div>
+    </div>
 </head>
 <body class="bg-bg-light min-h-screen pb-24">
     <!-- 顶部导航 -->
@@ -337,8 +347,8 @@
                 }
             });
 
-            // 获取挂号提醒
-            const registers = JSON.parse(localStorage.getItem('registers')) || [];
+            // 获取挂号提醒 - 修复键名匹配
+            const registers = JSON.parse(localStorage.getItem('registerReminders')) || [];
             registers.forEach(reg => {
 
                 if (reg.time) {
@@ -356,8 +366,8 @@
                 }
             });
 
-            // 获取就医提醒
-            const hospitals = JSON.parse(localStorage.getItem('hospitals')) || [];
+            // 获取就医提醒 - 修复键名匹配
+            const hospitals = JSON.parse(localStorage.getItem('hospitalReminders')) || [];
             hospitals.forEach(hosp => {
 
                 if (hosp.time) {
@@ -522,7 +532,7 @@
             
             const timeText = { morning: '早间', noon: '午间', evening: '晚间' };
             
-            container.innerHTML = dayEvents.map(event => {
+            container.innerHTML = dayEvents.map((event, idx) => {
 
                 const bgClass = {
 
@@ -540,18 +550,40 @@
                     'primary-red': 'bg-primary-red'
                 }[event.color] || 'bg-gray-400';
                 
+                // 获取详细时间
+                let timeDisplay = '';
+                if (event.time) {
+                    const d = new Date(event.time);
+                    timeDisplay = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                } else if (event.time === 'morning' || event.time === 'noon' || event.time === 'evening') {
+                    timeDisplay = timeText[event.time];
+                }
+                
+                // 药品详情
+                let detailHtml = '';
+                if (event.type === 'medicine') {
+                    detailHtml = `<span class="text-primary-blue">${event.detail || '按时服用'}</span>`;
+                } else if (event.type === 'register' || event.type === 'hospital') {
+                    detailHtml = `<span class="${event.type === 'register' ? 'text-primary-orange' : 'text-primary-green'}">${event.subtitle || event.detail}</span>`;
+                } else {
+                    detailHtml = `<span class="text-primary-red">${event.detail || ''}</span>`;
+                }
+                
                 return `
-                    <div class="flex items-center p-3 ${bgClass} border rounded-xl">
-                        <div class="w-10 h-10 ${iconClass} rounded-full flex items-center justify-center mr-3">
-                            <i class="fas ${event.icon} text-white"></i>
+                    <div class="flex items-center p-3 ${bgClass} border rounded-xl" data-event-id="${event.id || ''}" data-event-type="${event.type}">
+                        <div class="w-12 h-12 ${iconClass} rounded-full flex items-center justify-center mr-3">
+                            <i class="fas ${event.icon} text-white text-lg"></i>
                         </div>
 
                         <div class="flex-1">
-                            <p class="font-bold text-gray-800">${event.title}</p>
-                            <p class="text-sm text-gray-500">${event.detail || ''} ${event.time ? (timeText[event.time] || event.time) : ''}</p>
-
+                            <p class="font-bold text-gray-800 text-base">${event.title}</p>
+                            <p class="text-sm ${event.type === 'medicine' ? 'text-primary-blue' : event.type === 'register' ? 'text-primary-orange' : event.type === 'hospital' ? 'text-primary-green' : 'text-primary-red'}">${detailHtml}</p>
+                            ${timeDisplay ? `<p class="text-xs text-gray-400 mt-1"><i class="fas fa-clock mr-1"></i>${timeDisplay}</p>` : ''}
                         </div>
-
+                        ${event.type === 'register' || event.type === 'hospital' ? 
+                            `<button onclick="viewReminderDetail('${event.type}', ${event.id})" class="ml-2 px-3 py-2 bg-white rounded-lg text-sm font-medium ${event.type === 'register' ? 'text-primary-orange' : 'text-primary-green'} border ${event.type === 'register' ? 'border-orange-200' : 'border-green-200'}">
+                                <i class="fas fa-eye"></i>
+                            </button>` : ''}
                     </div>
                 `;
             }).join('');
@@ -560,6 +592,60 @@
 
         // 页面加载
         document.addEventListener('DOMContentLoaded', init);
+
+        // 大字体提示弹窗
+        function showBigAlert(message, callback) {
+            document.getElementById('bigAlertText').textContent = message;
+            document.getElementById('bigAlert').classList.remove('hidden');
+            if (callback) {
+                document.getElementById('bigAlert').onclick = callback;
+            }
+        }
+        function closeBigAlert() {
+            document.getElementById('bigAlert').classList.add('hidden');
+            document.getElementById('bigAlert').onclick = null;
+        }
+
+        // 查看提醒详情
+        function viewReminderDetail(type, id) {
+            if (type === 'register') {
+                const registers = JSON.parse(localStorage.getItem('registerReminders')) || [];
+                const reg = registers.find(r => r.id === id);
+                if (reg) {
+                    const time = new Date(reg.time);
+                    const timeStr = `${time.getFullYear()}年${time.getMonth()+1}月${time.getDate()}日 ${time.getHours().toString().padStart(2,'0')}:${time.getMinutes().toString().padStart(2,'0')}`;
+                    showBigAlert(`【挂号提醒详情】
+
+🏥 医院：${reg.hospital}
+🏥 科室：${reg.department}
+👨‍⚕️ 医生：${reg.doctor || '未指定'}
+📅 放号时间：${timeStr}
+📝 备注：${reg.note || '无'}
+✅ 状态：${reg.done ? '已完成' : '待抢号'}
+
+点击确定返回日历`);
+                }
+            } else if (type === 'hospital') {
+                const hospitals = JSON.parse(localStorage.getItem('hospitalReminders')) || [];
+                const hosp = hospitals.find(h => h.id === id);
+                if (hosp) {
+                    const time = new Date(hosp.time);
+                    const timeStr = `${time.getFullYear()}年${time.getMonth()+1}月${time.getDate()}日 ${time.getHours().toString().padStart(2,'0')}:${time.getMinutes().toString().padStart(2,'0')}`;
+                    const advanceText = hosp.advance >= 60 ? `${hosp.advance/60}小时前` : `${hosp.advance}分钟前`;
+                    showBigAlert(`【就医提醒详情】
+
+🏥 医院：${hosp.hospital}
+🏥 科室：${hosp.department}
+👨‍⚕️ 医生：${hosp.doctor || '未指定'}
+📅 就诊时间：${timeStr}
+⏰ 提前提醒：${advanceText}
+📝 备注：${hosp.note || '无'}
+✅ 状态：${hosp.done ? '已完成' : '待就诊'}
+
+点击确定返回日历`);
+                }
+            }
+        }
 
     </script>
 
