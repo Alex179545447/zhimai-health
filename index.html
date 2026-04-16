@@ -201,12 +201,30 @@
 
 
         // 获取当前时段（北京时间）
+        // 早晨：4-10点 | 中午：10-15点 | 晚上：15-24点 | 夜间：24-4点（休息）
         function getCurrentPeriod() {
             const beijingTime = getBeijingTime();
             const hour = beijingTime.getHours();
-            if (hour >= 5 && hour < 11) return { key: 'morning', text: '早间', icon: 'fa-sun' };
-            if (hour >= 11 && hour < 17) return { key: 'noon', text: '午间', icon: 'fa-cloud-sun' };
-            return { key: 'evening', text: '晚间', icon: 'fa-moon' };
+            if (hour >= 4 && hour < 10) return { key: 'morning', text: '早间', icon: 'fa-sun', minHour: 4 };
+            if (hour >= 10 && hour < 15) return { key: 'noon', text: '午间', icon: 'fa-cloud-sun', minHour: 10 };
+            if (hour >= 15 && hour < 24) return { key: 'evening', text: '晚间', icon: 'fa-moon', minHour: 15 };
+            return { key: 'night', text: '夜间休息', icon: 'fa-moon', minHour: 0 }; // 24-4点休息
+        }
+        
+        // 判断药品时段是否已到可服用时间
+        // 早上药4点后可服用，中午药10点后可服用，晚上药15点后可服用
+        function isMedicationTimeAllowed(medTime, currentHour) {
+            if (!medTime) return false;
+            const timeStr = Array.isArray(medTime) ? medTime.join(',') : medTime;
+            const times = timeStr.split(',');
+            
+            for (let t of times) {
+                t = t.trim();
+                if (t === 'morning' && currentHour >= 4) return true;
+                if (t === 'noon' && currentHour >= 10) return true;
+                if (t === 'evening' && currentHour >= 15) return true;
+            }
+            return false;
         }
 
         // 判断药品时段是否匹配（支持多选时段）
@@ -284,15 +302,19 @@
         }
 
 
-        // 渲染当前时段提醒 - 显示所有未服用的药品
+        // 渲染当前时段提醒 - 根据时段显示可服用的药品
         function renderPeriodAlert() {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+            const period = getCurrentPeriod();
+            const currentHour = period.minHour;
             
             // 获取所有今天应显示、且未服用的药品
+            // 只显示当前时段及之前时段未服用的药品
             const pending = medicines.filter(m => 
                 !m.taken && 
                 m.frequency !== 'once' &&
-                shouldShowToday(m)
+                shouldShowToday(m) &&
+                isMedicationTimeAllowed(m.time, currentHour)
             );
             
             const container = document.getElementById('periodAlert');
@@ -303,8 +325,8 @@
                         <div class="flex items-center">
                             <i class="fas fa-check-circle text-3xl text-green-500 mr-3"></i>
                             <div>
-                                <p class="font-bold text-lg">今日服药已完成</p>
-                                <p class="text-sm opacity-90">暂无待服药品</p>
+                                <p class="font-bold text-lg">${period.text} - 服药已全部完成</p>
+                                <p class="text-sm opacity-90">好好休息</p>
                             </div>
                         </div>
                         <i class="fas fa-check-circle text-3xl opacity-50"></i>
@@ -318,7 +340,7 @@
                         <div class="flex items-center">
                             <i class="fas fa-pills text-3xl text-primary-orange mr-3"></i>
                             <div>
-                                <p class="font-bold text-lg">今日待服药提醒</p>
+                                <p class="font-bold text-lg">${period.text}待服药</p>
                                 <p class="text-sm opacity-90">${names}${more}待服用</p>
                             </div>
                         </div>
@@ -348,12 +370,14 @@
         }
 
 
-        // 一键服用所有待服药
+        // 一键服用所有可服用药品（当前时段及之前未服用的）
         function takeAllPending() {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
+            const period = getCurrentPeriod();
+            const currentHour = period.minHour;
             let count = 0;
             medicines.forEach(m => {
-                if (!m.taken && m.frequency !== 'once' && shouldShowToday(m)) {
+                if (!m.taken && m.frequency !== 'once' && shouldShowToday(m) && isMedicationTimeAllowed(m.time, currentHour)) {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
                     count++;

@@ -461,78 +461,112 @@
 
         // 根据当前时间显示提醒
         function renderCurrentPeriodAlert() {
-            // 使用北京时间
+            // 使用北京时间 - 新时段划分
+            // 早晨：4-10点 | 中午：10-15点 | 晚上：15-24点 | 夜间：24-4点
             const beijingTime = getBeijingTime();
             const hour = beijingTime.getHours();
             let period = '';
             let periodText = '';
             let icon = '';
+            let minHour = 0;
             
-            if (hour >= 5 && hour < 12) {
+            if (hour >= 4 && hour < 10) {
                 period = 'morning';
                 periodText = '早间';
                 icon = 'fa-sun';
-            } else if (hour >= 12 && hour < 18) {
+                minHour = 4;
+            } else if (hour >= 10 && hour < 15) {
                 period = 'noon';
                 periodText = '午间';
                 icon = 'fa-cloud-sun';
-            } else {
+                minHour = 10;
+            } else if (hour >= 15 && hour < 24) {
                 period = 'evening';
                 periodText = '晚间';
                 icon = 'fa-moon';
+                minHour = 15;
+            } else {
+                period = 'night';
+                periodText = '夜间休息';
+                icon = 'fa-moon';
+                minHour = 0;
             }
 
-            // 只显示今天应该服用的药品（使用timeMatches支持多选时段）
-            const periodMeds = medicines.filter(m => shouldShowToday(m) && timeMatches(m.time, period));
-            const pendingMeds = periodMeds.filter(m => !m.taken);
+            // 获取当前可服用时间范围内未完成的药品
+            const pendingMeds = medicines.filter(m => 
+                shouldShowToday(m) && 
+                !m.taken && 
+                m.frequency !== 'once' &&
+                isMedicationTimeAllowed(m.time, hour)
+            );
             
             const container = document.getElementById('currentPeriodAlert');
-            if (periodMeds.length === 0) {
+            if (pendingMeds.length === 0) {
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <i class="fas ${icon} text-2xl mr-3"></i>
                             <div>
-                                <p class="font-bold">现在是${periodText}</p>
-                                <p class="text-sm opacity-80">暂无${periodText}服药提醒</p>
+                                <p class="font-bold">${periodText}</p>
+                                <p class="text-sm opacity-80">暂无待服用药品</p>
                             </div>
-
                         </div>
                     </div>
                 `;
             } else {
-
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <i class="fas ${icon} text-2xl mr-3"></i>
                             <div>
-                                <p class="font-bold">现在是${periodText}</p>
-                                <p class="text-sm opacity-80">${pendingMeds.length > 0 ? `还有 ${pendingMeds.length} 项待服用` : '已完成'+periodText+'服药'}</p>
+                                <p class="font-bold">${periodText}待服药</p>
+                                <p class="text-sm opacity-80">还有 ${pendingMeds.length} 项待服用</p>
                             </div>
-
                         </div>
-                        ${pendingMeds.length > 0 ? `<button onclick="markPeriodTaken('${period}')" class="px-4 py-2 bg-white text-primary-orange rounded-xl font-bold text-sm">
+                        <button onclick="takeAllMeds()" class="px-4 py-2 bg-white text-primary-orange rounded-xl font-bold text-sm">
                             <i class="fas fa-check mr-1"></i>一键服用
-                        </button>` : ''}
+                        </button>
                     </div>
                 `;
             }
         }
-
-        // 一键服用当前时段药品
-        function markPeriodTaken(period) {
+        
+        // 判断药品时段是否已到可服用时间
+        function isMedicationTimeAllowed(medTime, currentHour) {
+            if (!medTime) return false;
+            const timeStr = Array.isArray(medTime) ? medTime.join(',') : medTime;
+            const times = timeStr.split(',');
+            
+            for (let t of times) {
+                t = t.trim();
+                if (t === 'morning' && currentHour >= 4) return true;
+                if (t === 'noon' && currentHour >= 10) return true;
+                if (t === 'evening' && currentHour >= 15) return true;
+            }
+            return false;
+        }
+        
+        // 一键服用所有可服用药品
+        function takeAllMeds() {
+            const beijingTime = getBeijingTime();
+            const hour = beijingTime.getHours();
+            let count = 0;
             medicines.forEach(m => {
-                // 只标记今天应该显示的药品（使用timeMatches支持多选时段）
-                if (shouldShowToday(m) && timeMatches(m.time, period) && m.frequency !== 'once') {
+                if (shouldShowToday(m) && !m.taken && m.frequency !== 'once' && isMedicationTimeAllowed(m.time, hour)) {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
+                    count++;
                 }
             });
             localStorage.setItem('medicines', JSON.stringify(medicines));
             renderMedicines();
+            renderCurrentPeriodAlert();
+            if (count > 0) {
+                showBigAlert('已记录' + count + '项服药！');
+            }
         }
 
+        // 一键服用当前时段药品
         function renderMedicines() {
             const container = document.getElementById('medicineList');
             // 只显示今天应该服用的药品
