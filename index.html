@@ -456,11 +456,13 @@
         function updateStats() {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
             const bpRecords = JSON.parse(localStorage.getItem('bpRecords')) || [];
-            const today = new Date().toISOString().slice(0, 10);
+            // 使用北京时间获取今天的日期
+            const beijingTime = getBeijingTime();
+            const today = `${beijingTime.getFullYear()}-${String(beijingTime.getMonth()+1).padStart(2,'0')}-${String(beijingTime.getDate()).padStart(2,'0')}`;
             
             // 只统计今天应该显示的药品
             const todayMeds = medicines.filter(m => m.taken && m.frequency !== 'once' && shouldShowToday(m));
-            const todayBP = bpRecords.filter(r => r.date && r.date.includes(today));
+            const todayBP = bpRecords.filter(r => r.date && r.date.startsWith(today));
             const pending = medicines.filter(m => !m.taken && m.frequency !== 'once' && shouldShowToday(m));
             
             document.getElementById('todayMedicine').textContent = todayMeds.length;
