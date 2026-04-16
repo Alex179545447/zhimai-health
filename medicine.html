@@ -209,7 +209,6 @@
                         <select id="freqSelect" onchange="onFrequencyChange()" class="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:border-primary-blue focus:outline-none">
                             <option value="once">一次</option>
                             <option value="daily" selected>每天</option>
-                            <option value="every2days">隔天</option>
                             <option value="weekly">每周</option>
                             <option value="every2weeks">每2周</option>
                             <option value="every3weeks">每3周</option>
@@ -946,11 +945,10 @@
             const unit = document.getElementById('medUnit').value;
             const note = document.getElementById('medNote').value.trim();
             const startDate = document.getElementById('startDate').value;
-            const weekday = selectedWeekday;
             const monthday = parseInt(document.getElementById('monthday').value) || 1;
             
             if (!name) {
-                alert('请输入药品名称');
+                showBigAlert('请输入药品名称');
                 return;
             }
 
@@ -959,10 +957,14 @@
             if (selectedFrequency === 'custom') {
                 customFreqText = document.getElementById('customFreq').value.trim();
                 if (!customFreqText) {
-                    alert('请输入自定义频次');
+                    showBigAlert('请输入自定义频次');
                     return;
                 }
             }
+
+            // 每天从今天开始提醒
+            const today = new Date().toISOString().split('T')[0];
+            const effectiveStartDate = (frequency === 'daily' || !startDate) ? today : startDate;
 
             const medicineData = {
                 name,
@@ -972,9 +974,9 @@
                 condition: selectedCondition,
                 frequency,
                 customFreqText,
-                startDate: startDate || new Date().toISOString().split('T')[0],
+                startDate: effectiveStartDate,
                 note,
-                weekdays: selectedWeekdays, // 保存周几数组
+                weekdays: selectedWeekdays,
                 monthday: monthday,
                 taken: false,
                 takenTime: null,
@@ -990,7 +992,7 @@
                 localStorage.setItem('medicines', JSON.stringify(medicines));
                 closeAddModal();
                 renderMedicines();
-                alert('药品更新成功！');
+                showBigAlert('药品更新成功！');
             } else {
                 // 添加新药品
                 medicines.push(medicineData);
@@ -1002,7 +1004,7 @@
                 closeAddModal();
                 renderMedicines();
                 renderCommonMedicines();
-                alert('药品添加成功！');
+                showBigAlert('✅ 药品添加成功！\n\n' + name + '已加入今日服药提醒');
             }
         }
         
