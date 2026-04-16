@@ -461,43 +461,17 @@
 
         // 根据当前时间显示提醒
         function renderCurrentPeriodAlert() {
-            // 使用北京时间 - 新时段划分
-            // 早晨：4-10点 | 中午：10-15点 | 晚上：15-24点 | 夜间：24-4点
+            // 使用北京时间 - 显示今日所有待服药品
             const beijingTime = getBeijingTime();
             const hour = beijingTime.getHours();
-            let period = '';
-            let periodText = '';
-            let icon = '';
-            let minHour = 0;
+            let periodText = '今日';
+            let icon = 'fa-pills';
             
-            if (hour >= 4 && hour < 10) {
-                period = 'morning';
-                periodText = '早间';
-                icon = 'fa-sun';
-                minHour = 4;
-            } else if (hour >= 10 && hour < 15) {
-                period = 'noon';
-                periodText = '午间';
-                icon = 'fa-cloud-sun';
-                minHour = 10;
-            } else if (hour >= 15 && hour < 24) {
-                period = 'evening';
-                periodText = '晚间';
-                icon = 'fa-moon';
-                minHour = 15;
-            } else {
-                period = 'night';
-                periodText = '夜间休息';
-                icon = 'fa-moon';
-                minHour = 0;
-            }
-
-            // 获取当前可服用时间范围内未完成的药品
+            // 获取所有今日应服用且未服用的药品
             const pendingMeds = medicines.filter(m => 
                 shouldShowToday(m) && 
                 !m.taken && 
-                m.frequency !== 'once' &&
-                isMedicationTimeAllowed(m.time, hour)
+                m.frequency !== 'once'
             );
             
             const container = document.getElementById('currentPeriodAlert');
@@ -505,9 +479,9 @@
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                            <i class="fas ${icon} text-2xl mr-3"></i>
+                            <i class="fas fa-check-circle text-2xl text-green-500 mr-3"></i>
                             <div>
-                                <p class="font-bold">${periodText}</p>
+                                <p class="font-bold">今日服药已全部完成</p>
                                 <p class="text-sm opacity-80">暂无待服用药品</p>
                             </div>
                         </div>
@@ -517,10 +491,10 @@
                 container.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
-                            <i class="fas ${icon} text-2xl mr-3"></i>
+                            <i class="fas ${icon} text-2xl text-primary-orange mr-3"></i>
                             <div>
-                                <p class="font-bold">${periodText}待服药</p>
-                                <p class="text-sm opacity-80">还有 ${pendingMeds.length} 项待服用</p>
+                                <p class="font-bold">今日待服药（${pendingMeds.length}项）</p>
+                                <p class="text-sm opacity-80">请按时服药</p>
                             </div>
                         </div>
                         <button onclick="takeAllMeds()" class="px-4 py-2 bg-white text-primary-orange rounded-xl font-bold text-sm">
@@ -531,28 +505,11 @@
             }
         }
         
-        // 判断药品时段是否已到可服用时间
-        function isMedicationTimeAllowed(medTime, currentHour) {
-            if (!medTime) return false;
-            const timeStr = Array.isArray(medTime) ? medTime.join(',') : medTime;
-            const times = timeStr.split(',');
-            
-            for (let t of times) {
-                t = t.trim();
-                if (t === 'morning' && currentHour >= 4) return true;
-                if (t === 'noon' && currentHour >= 10) return true;
-                if (t === 'evening' && currentHour >= 15) return true;
-            }
-            return false;
-        }
-        
-        // 一键服用所有可服用药品
+        // 一键服用所有今日待服药
         function takeAllMeds() {
-            const beijingTime = getBeijingTime();
-            const hour = beijingTime.getHours();
             let count = 0;
             medicines.forEach(m => {
-                if (shouldShowToday(m) && !m.taken && m.frequency !== 'once' && isMedicationTimeAllowed(m.time, hour)) {
+                if (shouldShowToday(m) && !m.taken && m.frequency !== 'once') {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
                     count++;

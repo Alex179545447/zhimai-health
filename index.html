@@ -302,19 +302,16 @@
         }
 
 
-        // 渲染当前时段提醒 - 根据时段显示可服用的药品
+        // 渲染今日待服药提醒 - 显示所有今天应服用的药品
         function renderPeriodAlert() {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
             const period = getCurrentPeriod();
-            const currentHour = period.minHour;
             
-            // 获取所有今天应显示、且未服用的药品
-            // 只显示当前时段及之前时段未服用的药品
+            // 获取所有今天应显示、且未服用的药品（全部显示，不再按时段过滤）
             const pending = medicines.filter(m => 
                 !m.taken && 
                 m.frequency !== 'once' &&
-                shouldShowToday(m) &&
-                isMedicationTimeAllowed(m.time, currentHour)
+                shouldShowToday(m)
             );
             
             const container = document.getElementById('periodAlert');
@@ -325,7 +322,7 @@
                         <div class="flex items-center">
                             <i class="fas fa-check-circle text-3xl text-green-500 mr-3"></i>
                             <div>
-                                <p class="font-bold text-lg">${period.text} - 服药已全部完成</p>
+                                <p class="font-bold text-lg">今日服药已全部完成</p>
                                 <p class="text-sm opacity-90">好好休息</p>
                             </div>
                         </div>
@@ -340,7 +337,7 @@
                         <div class="flex items-center">
                             <i class="fas fa-pills text-3xl text-primary-orange mr-3"></i>
                             <div>
-                                <p class="font-bold text-lg">${period.text}待服药</p>
+                                <p class="font-bold text-lg">今日待服药（${pending.length}项）</p>
                                 <p class="text-sm opacity-90">${names}${more}待服用</p>
                             </div>
                         </div>
@@ -370,14 +367,12 @@
         }
 
 
-        // 一键服用所有可服用药品（当前时段及之前未服用的）
+        // 一键服用所有今日待服药
         function takeAllPending() {
             const medicines = JSON.parse(localStorage.getItem('medicines')) || [];
-            const period = getCurrentPeriod();
-            const currentHour = period.minHour;
             let count = 0;
             medicines.forEach(m => {
-                if (!m.taken && m.frequency !== 'once' && shouldShowToday(m) && isMedicationTimeAllowed(m.time, currentHour)) {
+                if (!m.taken && m.frequency !== 'once' && shouldShowToday(m)) {
                     m.taken = true;
                     m.takenTime = new Date().toISOString();
                     count++;
